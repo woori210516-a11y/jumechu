@@ -1,65 +1,278 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import CharacterImage from '@/app/components/CharacterImage';
+import ResultView from '@/app/components/ResultView';
+import { questions, getActiveQuestions } from '@/app/lib/questions';
+import { calculateResults } from '@/app/lib/scoring';
+import { answersToParams } from '@/app/lib/share';
+import type { Answers, ScoredMenu } from '@/app/types';
+import menusData from '@/data/menus.json';
+
+type View = 'intro' | 'quiz' | 'result';
+
+interface HistoryEntry {
+  qIdx: number;
+  answers: Answers;
+}
 
 export default function Home() {
+  const [view, setView] = useState<View>('intro');
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState<Answers>({});
+  const [multiSelect, setMultiSelect] = useState<string[]>([]);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [results, setResults] = useState<ScoredMenu[]>([]);
+
+  const activeQuestions = getActiveQuestions(answers.drink, answers.foodType);
+  const currentQuestion = activeQuestions[questionIndex];
+  const total = activeQuestions.length;
+
+  function advance(newAnswers: Answers) {
+    const newActiveQuestions = questions.filter((q) => {
+      if (!q.conditional) return true;
+      if (q.id === 'drinkType') return newAnswers.drink === '마심';
+      if (q.id === 'meatType') return newAnswers.foodType?.includes('고기') ?? false;
+      return false;
+    });
+    const nextIndex = questionIndex + 1;
+    if (nextIndex < newActiveQuestions.length) {
+      setQuestionIndex(nextIndex);
+      setMultiSelect([]);
+    } else {
+      finishQuiz(newAnswers);
+    }
+  }
+
+  function handleSingleAnswer(option: string) {
+    const newAnswers: Answers = { ...answers, [currentQuestion.id]: option };
+    setHistory((prev) => [...prev, { qIdx: questionIndex, answers }]);
+    setAnswers(newAnswers);
+    advance(newAnswers);
+  }
+
+  function handleMultiConfirm() {
+    const newAnswers: Answers = { ...answers };
+    if (currentQuestion.id === 'foodType') newAnswers.foodType = multiSelect;
+    else if (currentQuestion.id === 'avoid') newAnswers.avoid = multiSelect;
+    else if (currentQuestion.id === 'meatType') newAnswers.meatType = multiSelect;
+    setHistory((prev) => [...prev, { qIdx: questionIndex, answers }]);
+    setAnswers(newAnswers);
+    advance(newAnswers);
+  }
+
+  function handleBack() {
+    if (history.length === 0) return;
+    const prev = history[history.length - 1];
+    setHistory((h) => h.slice(0, -1));
+    setQuestionIndex(prev.qIdx);
+    setAnswers(prev.answers);
+    setMultiSelect([]);
+  }
+
+  function toggleMultiOption(option: string) {
+    const exclusives = ['없음', '상관없음'];
+    if (exclusives.includes(option)) {
+      setMultiSelect([option]);
+    } else {
+      setMultiSelect((prev) => {
+        const withoutExclusive = prev.filter((x) => !exclusives.includes(x));
+        if (withoutExclusive.includes(option)) {
+          return withoutExclusive.filter((x) => x !== option);
+        }
+        return [...withoutExclusive, option];
+      });
+    }
+  }
+
+  function finishQuiz(finalAnswers: Answers) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const scored = calculateResults(finalAnswers, menusData.menus as any);
+    setResults(scored);
+    setView('result');
+  }
+
+  function restart() {
+    setView('intro');
+    setQuestionIndex(0);
+    setAnswers({});
+    setMultiSelect([]);
+    setHistory([]);
+    setResults([]);
+  }
+
+  const showFunnyMessage = answers.diet === '빡세게 중' && answers.drink === '마심';
+
+  const shareUrl =
+    view === 'result'
+      ? `${window.location.origin}/result?${answersToParams(answers).toString()}`
+      : undefined;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen flex justify-center items-start">
+      <div className="w-full max-w-[390px] min-h-screen bg-white flex flex-col shadow-2xl shadow-rose-200/50">
+        {view === 'intro' && (
+          <IntroView onStart={() => setView('quiz')} />
+        )}
+        {view === 'quiz' && currentQuestion && (
+          <QuizView
+            question={currentQuestion}
+            questionNumber={questionIndex + 1}
+            total={total}
+            multiSelect={multiSelect}
+            showBack={history.length > 0}
+            onSingleAnswer={handleSingleAnswer}
+            onToggleMulti={toggleMultiOption}
+            onMultiConfirm={handleMultiConfirm}
+            onBack={handleBack}
+          />
+        )}
+        {view === 'result' && (
+          <ResultView
+            results={results}
+            showFunnyMessage={showFunnyMessage}
+            shareUrl={shareUrl}
+            onRestart={restart}
+          />
+        )}
+      </div>
+    </main>
+  );
+}
+
+// ── Intro ─────────────────────────────────────────────────────────────────────
+
+function IntroView({ onStart }: { onStart: () => void }) {
+  return (
+    <div className="flex flex-col flex-1 items-center justify-center px-6 py-12 gap-8 animate-fade-slide">
+      <div className="flex flex-col items-center gap-4">
+        <CharacterImage size={140} />
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
+            오늘 뭐 먹지? 🍽️
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+
+      <button
+        onClick={onStart}
+        className="w-full py-4 rounded-2xl bg-gradient-to-r from-rose-400 to-orange-400 text-white text-lg font-bold shadow-lg shadow-rose-200 active:scale-95 transition-transform"
+      >
+        메뉴 고르기 🎯
+      </button>
+    </div>
+  );
+}
+
+// ── Quiz ──────────────────────────────────────────────────────────────────────
+
+interface QuizViewProps {
+  question: (typeof questions)[0];
+  questionNumber: number;
+  total: number;
+  multiSelect: string[];
+  showBack: boolean;
+  onSingleAnswer: (option: string) => void;
+  onToggleMulti: (option: string) => void;
+  onMultiConfirm: () => void;
+  onBack: () => void;
+}
+
+function QuizView({
+  question,
+  questionNumber,
+  total,
+  multiSelect,
+  showBack,
+  onSingleAnswer,
+  onToggleMulti,
+  onMultiConfirm,
+  onBack,
+}: QuizViewProps) {
+  const progress = (questionNumber / total) * 100;
+
+  return (
+    <div className="flex flex-col flex-1 px-5 pt-6 pb-6 gap-4 animate-fade-slide">
+      {showBack && (
+        <button
+          onClick={onBack}
+          className="self-start flex items-center gap-1 text-sm text-gray-400 font-medium hover:text-gray-600 transition-colors active:scale-95"
+        >
+          ← 이전으로
+        </button>
+      )}
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <CharacterImage size={36} />
+          <span className="text-sm font-medium text-gray-500">
+            {questionNumber}/{total}
+          </span>
         </div>
-      </main>
+        <span className="text-xs text-gray-400 font-medium">
+          {Math.round(progress)}%
+        </span>
+      </div>
+
+      <div className="w-full h-2 bg-orange-100 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-rose-400 to-orange-400 rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+
+      <div className="mt-1">
+        <p className="text-xl font-bold text-gray-800 leading-snug">
+          {question.text}
+        </p>
+        {question.subText && (
+          <p className="mt-1 text-sm text-gray-400">{question.subText}</p>
+        )}
+      </div>
+
+      {question.type === 'single' ? (
+        <div className="flex flex-col gap-3 flex-1">
+          {question.options.map((option) => (
+            <button
+              key={option}
+              onClick={() => onSingleAnswer(option)}
+              className="w-full py-4 px-5 rounded-2xl border-2 border-orange-200 bg-white text-gray-700 font-medium text-base text-left active:scale-95 active:bg-orange-50 hover:border-rose-300 hover:bg-rose-50 transition-all"
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3 flex-1">
+          <div className="grid grid-cols-2 gap-3">
+            {question.options.map((option) => {
+              const selected = multiSelect.includes(option);
+              return (
+                <button
+                  key={option}
+                  onClick={() => onToggleMulti(option)}
+                  className={`py-3 px-4 rounded-2xl border-2 font-medium text-sm transition-all active:scale-95 ${
+                    selected
+                      ? 'border-rose-400 bg-gradient-to-br from-rose-400 to-orange-400 text-white shadow-md shadow-rose-200'
+                      : 'border-orange-200 bg-white text-gray-700 hover:border-rose-300 hover:bg-rose-50'
+                  }`}
+                >
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-auto pt-2">
+            <button
+              onClick={onMultiConfirm}
+              disabled={multiSelect.length === 0}
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-rose-400 to-orange-400 text-white font-bold text-base shadow-lg shadow-rose-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-transform"
+            >
+              선택 완료 ✓
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

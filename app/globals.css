@@ -1,26 +1,44 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-coral: #FF6B6B;
+  --color-coral-light: #FFE8E8;
+  --color-peach: #FFB347;
+  --color-peach-light: #FFF3E0;
+  --font-sans: var(--font-noto-kr);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-noto-kr), 'Noto Sans KR', sans-serif;
+  background: linear-gradient(135deg, #FFE4D6 0%, #FFD6E8 60%, #E8D6FF 100%);
+  min-height: 100vh;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.95); opacity: 0; }
+  60% { transform: scale(1.02); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-fade-slide {
+  animation: fadeSlideIn 0.35s ease-out forwards;
+}
+
+.animate-pop {
+  animation: popIn 0.3s ease-out forwards;
 }
