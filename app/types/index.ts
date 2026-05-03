@@ -11,7 +11,7 @@ export interface Menu {
   tags: {
     foodType: Record<string, string>;
     soup: string;
-    spicy: Record<string, string>;
+    spicy: Record<string, number>;
     amount: Record<string, string>;
     condition: Record<string, string>;
     weather: Record<string, string>;

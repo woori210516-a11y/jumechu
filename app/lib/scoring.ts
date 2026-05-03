@@ -119,10 +119,14 @@ export function calculateScore(menu: Menu, answers: Answers): number {
     }
   }
 
-  // Spicy
+  // Spicy — spicy 값이 0이면 제외, 아니면 값 × 가중치 / 10 점수 반영
   if (answers.spicy && answers.spicy !== '상관없음') {
     const key = spicyMap[answers.spicy];
-    if (key) score += scoreTag(menu.tags.spicy, key, WEIGHTS.spicy);
+    if (key) {
+      const spicyValue = menu.tags.spicy[key] ?? 0;
+      if (spicyValue === 0) return Number.NEGATIVE_INFINITY;
+      score += (spicyValue * WEIGHTS.spicy) / 10;
+    }
   }
 
   // Amount
