@@ -1,38 +1,41 @@
-'use client';
-
 import { Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import ResultView from '@/app/components/ResultView';
-import { paramsToAnswers } from '@/app/lib/share';
-import { calculateResults } from '@/app/lib/scoring';
-import menusData from '@/data/menus.json';
+import type { Metadata } from 'next';
+import ResultContent from './ResultContent';
 
-function ResultPage() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-  const answers = paramsToAnswers(searchParams);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const results = calculateResults(answers, menusData.menus as any);
-  const showFunnyMessage = answers.diet === '빡세게 중' && answers.drink === '마심';
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000';
 
-  return (
-    <main className="min-h-screen flex justify-center items-start">
-      <div className="w-full max-w-[390px] min-h-screen bg-white flex flex-col shadow-2xl shadow-rose-200/50">
-        <ResultView
-          results={results}
-          showFunnyMessage={showFunnyMessage}
-          onRestart={() => router.push('/')}
-        />
-      </div>
-    </main>
-  );
+  const qs = new URLSearchParams(
+    Object.fromEntries(
+      Object.entries(params).flatMap(([k, v]) =>
+        v == null ? [] : Array.isArray(v) ? [[k, v.join(',')]] : [[k, v]]
+      )
+    )
+  ).toString();
+  const url = `${baseUrl}/result${qs ? `?${qs}` : ''}`;
+
+  return {
+    title: '너로 정했다 🍽️',
+    description: '오늘 메뉴는..',
+    openGraph: {
+      title: '너로 정했다 🍽️',
+      description: '오늘 메뉴는..',
+      url,
+    },
+  };
 }
 
 export default function Page() {
   return (
     <Suspense>
-      <ResultPage />
+      <ResultContent />
     </Suspense>
   );
 }

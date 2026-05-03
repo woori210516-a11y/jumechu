@@ -10,8 +10,14 @@ const notoSansKR = Noto_Sans_KR({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'),
   title: '오늘 뭐 먹지? 🍽️',
-  description: '남친이 골라주는 메뉴 추천 서비스',
+  description: '뭐 먹을지 모르겠다면 ㄱㄱ',
+  openGraph: {
+    title: '오늘 뭐 먹지? 🍽️',
+    description: '뭐 먹을지 모르겠다면 ㄱㄱ',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({
