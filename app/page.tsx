@@ -5,7 +5,7 @@ import CharacterImage from '@/app/components/CharacterImage';
 import ResultView from '@/app/components/ResultView';
 import { questions, getActiveQuestions } from '@/app/lib/questions';
 import { calculateResults } from '@/app/lib/scoring';
-import { answersToParams } from '@/app/lib/share';
+import { resultsToShareParam } from '@/app/lib/share';
 import type { Answers, ScoredMenu } from '@/app/types';
 import menusData from '@/data/menus.json';
 
@@ -104,8 +104,8 @@ export default function Home() {
   const showFunnyMessage = answers.diet === '빡세게 중' && answers.drink === '마심';
 
   const shareUrl =
-    view === 'result'
-      ? `${window.location.origin}/result?${answersToParams(answers).toString()}`
+    view === 'result' && results.length > 0
+      ? `${window.location.origin}/result?q=${resultsToShareParam(results)}`
       : undefined;
 
   return (

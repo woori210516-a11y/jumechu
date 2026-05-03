@@ -65,7 +65,9 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
           <span className="text-xs font-bold text-rose-100 bg-white/20 px-2 py-0.5 rounded-full">
             🥇 1위
           </span>
-          <span className="text-xs text-rose-100">점수 {first.score}</span>
+          {first.score > 0 && (
+            <span className="text-xs text-rose-100">점수 {first.score}</span>
+          )}
         </div>
         <p className="text-2xl font-bold text-white mt-1">{first.menu.name}</p>
         <p className="text-rose-100 text-sm mt-1">
@@ -128,7 +130,7 @@ function AlternativeCard({ rank, item }: { rank: number; item: ScoredMenu }) {
           </span>
           <span className="font-bold text-gray-800 text-base">{item.menu.name}</span>
         </div>
-        <span className="text-xs text-gray-400">{item.score}점</span>
+        {item.score > 0 && <span className="text-xs text-gray-400">{item.score}점</span>}
       </div>
       {item.menu.subItems && item.menu.subItems.length > 0 && (
         <p className="mt-1 text-xs text-gray-500">{item.menu.subItems.join(' / ')}</p>
