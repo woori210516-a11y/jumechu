@@ -74,7 +74,7 @@ export function calculateScore(menu: Menu, answers: Answers): number {
     answers.avoid &&
     !answers.avoid.includes('없음') &&
     answers.avoid.length > 0 &&
-    answers.avoid.includes(menu.category)
+    menu.avoidCategory?.some((cat) => answers.avoid!.includes(cat))
   ) {
     return Number.NEGATIVE_INFINITY;
   }

@@ -2,6 +2,7 @@ export interface Menu {
   id: number;
   name: string;
   category: string;
+  avoidCategory?: string[];
   subItems?: string[];
   diet: '좋음' | '보통' | '나쁨';
   drinkType: Record<string, string>;
