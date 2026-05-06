@@ -23,7 +23,7 @@ export const questions: Question[] = [
     id: 'foodType',
     text: '어떤 음식이 당겨?',
     subText: '여러 개 선택 가능해',
-    options: ['밥', '면', '빵', '고기', '상관없음'],
+    options: ['밥', '면', '빵', '고기', '생선', '상관없음'],
     type: 'multi',
   },
   {

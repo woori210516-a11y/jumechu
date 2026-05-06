@@ -5,17 +5,17 @@ export interface Menu {
   avoidCategory?: string[];
   subItems?: string[];
   diet: '좋음' | '보통' | '나쁨';
-  drinkType: Record<string, string>;
+  drinkType: Record<string, number>;
   isSnack: boolean | string;
   meatType?: string;
   mood?: string;
   tags: {
-    foodType: Record<string, string>;
-    soup: string;
+    foodType: Record<string, number>;
+    soup: number;
     spicy: Record<string, number>;
-    amount: Record<string, string>;
-    condition: Record<string, string>;
-    weather: Record<string, string>;
+    amount: Record<string, number>;
+    condition: Record<string, number>;
+    weather: Record<string, number>;
   };
 }
 

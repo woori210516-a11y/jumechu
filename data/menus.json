@@ -1,24 +1,13 @@
 {
   "scoreWeights": {
-    "drinkType": 6,
+    "drinkType": 5,
     "foodType": 5,
     "spicy": 5,
     "condition": 2,
     "weather": 2,
-    "soup": 2,
-    "amount": 1,
+    "soup": 5,
+    "amount": 3,
     "mood": 3
-  },
-  "grades": {
-    "strong": 2,
-    "normal": 1,
-    "none": 0
-  },
-  "excludeRules": {
-    "noDrink": "안주(전용) 메뉴 제외",
-    "dietStrict": "다이어트 나쁨 메뉴 제외",
-    "dietModerate": "다이어트 나쁨 메뉴 -3점",
-    "avoidCategory": "선택한 카테고리 메뉴 제외"
   },
   "avoidCategories": ["찌개","국밥","고기구이","찜","중식","일식","양식","분식","치킨","피자","안주","면류","햄버거","기타국물요리","생선구이","튀김"],
   "menus": [
@@ -29,34 +18,34 @@
       "avoidCategory": ["찌개"],
       "diet": "보통",
       "mood": "편한",
-      "drinkType": {"소주": "normal"},
+      "drinkType": {"소주": 5, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"밥": "strong"},
-        "soup": "strong",
+        "foodType": {"밥": 10, "면": 0, "빵": 0, "고기": 0, "생선": 0},
+        "soup": 10,
         "spicy": {"안매움": 0, "보통": 10, "매움": 0},
-        "amount": {"든든": "normal"},
-        "condition": {"스트레스": "normal"},
-        "weather": {"추움": "strong", "비": "normal"}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 0, "멀쩡": 0, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 10, "비": 5}
       }
     },
     {
       "id": 2,
       "name": "제육볶음",
       "category": "한식",
-      "avoidCategory": ["고기구이"],
+      "avoidCategory": [],
       "diet": "나쁨",
       "meatType": "돼지",
       "mood": "편한",
-      "drinkType": {"소주": "strong", "맥주": "normal"},
+      "drinkType": {"소주": 10, "맥주": 5, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"밥": "normal", "고기": "normal"},
-        "soup": "none",
+        "foodType": {"밥": 10, "면": 0, "빵": 0, "고기": 10, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 0, "보통": 0, "매움": 10},
-        "amount": {"든든": "normal"},
-        "condition": {"스트레스": "strong"},
-        "weather": {}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 0, "멀쩡": 0, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     },
     {
@@ -67,15 +56,15 @@
       "diet": "나쁨",
       "meatType": "돼지",
       "mood": "편한",
-      "drinkType": {"소주": "strong", "맥주": "normal"},
+      "drinkType": {"소주": 10, "맥주": 5, "막걸리": 0, "와인·양주": 0},
       "isSnack": "안주",
       "tags": {
-        "foodType": {"고기": "strong"},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 10, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"든든": "strong"},
-        "condition": {"멀쩡": "normal"},
-        "weather": {}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 10},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     },
     {
@@ -85,15 +74,15 @@
       "avoidCategory": ["고기구이"],
       "diet": "나쁨",
       "meatType": "닭",
-      "drinkType": {"소주": "normal"},
+      "drinkType": {"소주": 5, "맥주": 5, "막걸리": 0, "와인·양주": 0},
       "isSnack": "안주",
       "tags": {
-        "foodType": {"고기": "strong"},
-        "soup": "none",
-        "spicy": {"안매움": 0, "보통": 0, "매움": 10},
-        "amount": {"든든": "normal"},
-        "condition": {"스트레스": "strong"},
-        "weather": {}
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 10, "생선": 0},
+        "soup": 0,
+        "spicy": {"안매움": 0, "보통": 10, "매움": 0},
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 0, "멀쩡": 0, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     },
     {
@@ -102,15 +91,15 @@
       "category": "한식",
       "avoidCategory": ["면류"],
       "diet": "보통",
-      "drinkType": {"소주": "normal"},
+      "drinkType": {"소주": 5, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"면": "strong"},
-        "soup": "normal",
+        "foodType": {"밥": 0, "면": 10, "빵": 0, "고기": 0, "생선": 0},
+        "soup": 10,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"가볍": "strong"},
-        "condition": {"멀쩡": "normal"},
-        "weather": {"더움": "strong"}
+        "amount": {"가볍": 0, "보통": 10, "든든": 0},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 10, "추움": 0, "비": 0}
       }
     },
     {
@@ -119,15 +108,15 @@
       "category": "한식",
       "avoidCategory": ["면류"],
       "diet": "보통",
-      "drinkType": {},
+      "drinkType": {"소주": 0, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"면": "strong"},
-        "soup": "normal",
-        "spicy": {"안매움": 0, "보통": 0, "매움": 10},
-        "amount": {"보통": "normal"},
-        "condition": {"멀쩡": "normal"},
-        "weather": {"더움": "strong"}
+        "foodType": {"밥": 0, "면": 10, "빵": 0, "고기": 0, "생선": 0},
+        "soup": 5,
+        "spicy": {"안매움": 0, "보통": 10, "매움": 0},
+        "amount": {"가볍": 0, "보통": 10, "든든": 0},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 10, "추움": 0, "비": 0}
       }
     },
     {
@@ -137,15 +126,15 @@
       "avoidCategory": ["면류"],
       "diet": "보통",
       "mood": "편한",
-      "drinkType": {},
+      "drinkType": {"소주": 0, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"면": "strong"},
-        "soup": "strong",
+        "foodType": {"밥": 0, "면": 10, "빵": 0, "고기": 0, "생선": 0},
+        "soup": 10,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"보통": "normal"},
-        "condition": {"피곤": "normal"},
-        "weather": {"추움": "strong", "비": "strong"}
+        "amount": {"가볍": 0, "보통": 10, "든든": 0},
+        "condition": {"피곤": 5, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 10, "비": 10}
       }
     },
     {
@@ -154,15 +143,15 @@
       "category": "한식",
       "avoidCategory": ["면류"],
       "diet": "나쁨",
-      "drinkType": {},
+      "drinkType": {"소주": 0, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"면": "normal", "고기": "normal"},
-        "soup": "strong",
+        "foodType": {"밥": 0, "면": 10, "빵": 0, "고기": 10, "생선": 0},
+        "soup": 10,
         "spicy": {"안매움": 0, "보통": 0, "매움": 10},
-        "amount": {"든든": "normal"},
-        "condition": {"피곤": "normal"},
-        "weather": {"추움": "strong"}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 10, "멀쩡": 0, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 10, "비": 10}
       }
     },
     {
@@ -172,15 +161,15 @@
       "avoidCategory": ["기타국물요리"],
       "diet": "좋음",
       "mood": "색다른",
-      "drinkType": {},
+      "drinkType": {"소주": 0, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"고기": "strong"},
-        "soup": "strong",
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 10, "생선": 0},
+        "soup": 10,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"든든": "normal"},
-        "condition": {"멀쩡": "strong"},
-        "weather": {"추움": "normal"}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 10, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 10, "비": 10}
       }
     },
     {
@@ -190,15 +179,15 @@
       "avoidCategory": ["찌개"],
       "diet": "좋음",
       "mood": "편한",
-      "drinkType": {"소주": "normal"},
+      "drinkType": {"소주": 5, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"밥": "normal"},
-        "soup": "strong",
+        "foodType": {"밥": 10, "면": 0, "빵": 0, "고기": 0, "생선": 0},
+        "soup": 10,
         "spicy": {"안매움": 0, "보통": 10, "매움": 0},
-        "amount": {"든든": "normal"},
-        "condition": {"피곤": "strong"},
-        "weather": {"추움": "strong", "비": "normal"}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 10, "멀쩡": 0, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 10, "비": 5}
       }
     },
     {
@@ -208,15 +197,15 @@
       "avoidCategory": ["국밥"],
       "diet": "보통",
       "mood": "편한",
-      "drinkType": {"소주": "normal"},
+      "drinkType": {"소주": 10, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"밥": "strong"},
-        "soup": "strong",
+        "foodType": {"밥": 10, "면": 0, "빵": 0, "고기": 0, "생선": 0},
+        "soup": 10,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"든든": "normal"},
-        "condition": {"피곤": "strong"},
-        "weather": {"추움": "strong", "비": "normal"}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 10, "멀쩡": 0, "스트레스": 10},
+        "weather": {"더움": 0, "추움": 10, "비": 5}
       }
     },
     {
@@ -226,15 +215,15 @@
       "avoidCategory": ["국밥"],
       "diet": "보통",
       "mood": "편한",
-      "drinkType": {},
+      "drinkType": {"소주": 0, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"밥": "strong"},
-        "soup": "strong",
+        "foodType": {"밥": 10, "면": 0, "빵": 0, "고기": 0, "생선": 0},
+        "soup": 10,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"보통": "normal"},
-        "condition": {"피곤": "strong"},
-        "weather": {"추움": "normal"}
+        "amount": {"가볍": 0, "보통": 10, "든든": 0},
+        "condition": {"피곤": 10, "멀쩡": 0, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 10, "비": 5}
       }
     },
     {
@@ -244,15 +233,15 @@
       "avoidCategory": ["고기구이"],
       "diet": "나쁨",
       "meatType": "돼지",
-      "drinkType": {"소주": "strong", "막걸리": "normal"},
+      "drinkType": {"소주": 10, "맥주": 0, "막걸리": 5, "와인·양주": 0},
       "isSnack": "안주",
       "tags": {
-        "foodType": {"고기": "strong"},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 10, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"든든": "strong"},
-        "condition": {"멀쩡": "normal"},
-        "weather": {}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     },
     {
@@ -261,15 +250,15 @@
       "category": "한식",
       "avoidCategory": ["생선구이"],
       "diet": "좋음",
-      "drinkType": {},
+      "drinkType": {"소주": 0, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"밥": "normal"},
-        "soup": "none",
+        "foodType": {"밥": 10, "면": 0, "빵": 0, "고기": 0, "생선": 10},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"보통": "normal"},
-        "condition": {"멀쩡": "strong"},
-        "weather": {}
+        "amount": {"가볍": 0, "보통": 10, "든든": 0},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     },
     {
@@ -280,15 +269,15 @@
       "subItems": ["짜장면", "짬뽕", "탕수육"],
       "diet": "나쁨",
       "mood": "편한",
-      "drinkType": {"맥주": "normal"},
+      "drinkType": {"소주": 0, "맥주": 5, "막걸리": 0, "와인·양주": 0},
       "isSnack": "안주",
       "tags": {
-        "foodType": {"면": "normal", "고기": "normal"},
-        "soup": "normal",
+        "foodType": {"밥": 0, "면": 10, "빵": 0, "고기": 10, "생선": 0},
+        "soup": 5,
         "spicy": {"안매움": 0, "보통": 10, "매움": 0},
-        "amount": {"든든": "normal"},
-        "condition": {"스트레스": "strong", "멀쩡": "normal"},
-        "weather": {"추움": "normal", "비": "strong"}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 10},
+        "weather": {"더움": 0, "추움": 5, "비": 10}
       }
     },
     {
@@ -298,15 +287,15 @@
       "avoidCategory": ["중식"],
       "diet": "보통",
       "mood": "색다른",
-      "drinkType": {},
+      "drinkType": {"소주": 0, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"면": "strong"},
-        "soup": "strong",
+        "foodType": {"밥": 0, "면": 10, "빵": 0, "고기": 0, "생선": 0},
+        "soup": 10,
         "spicy": {"안매움": 0, "보통": 0, "매움": 10},
-        "amount": {"든든": "normal"},
-        "condition": {"스트레스": "strong"},
-        "weather": {"추움": "normal"}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 0, "멀쩡": 0, "스트레스": 10},
+        "weather": {"더움": 0, "추움": 5, "비": 0}
       }
     },
     {
@@ -317,15 +306,15 @@
       "diet": "보통",
       "meatType": "양",
       "mood": "색다른",
-      "drinkType": {"맥주": "strong", "소주": "normal"},
+      "drinkType": {"소주": 5, "맥주": 10, "막걸리": 0, "와인·양주": 0},
       "isSnack": "안주",
       "tags": {
-        "foodType": {"고기": "strong"},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 10, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"든든": "normal"},
-        "condition": {"멀쩡": "strong"},
-        "weather": {}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     },
     {
@@ -335,15 +324,15 @@
       "avoidCategory": ["일식"],
       "diet": "좋음",
       "mood": "색다른",
-      "drinkType": {},
+      "drinkType": {"소주": 0, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"밥": "strong"},
-        "soup": "none",
+        "foodType": {"밥": 10, "면": 0, "빵": 0, "고기": 0, "생선": 10},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"가볍": "strong"},
-        "condition": {"멀쩡": "strong"},
-        "weather": {"더움": "normal"}
+        "amount": {"가볍": 10, "보통": 0, "든든": 0},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 5, "추움": 0, "비": 0}
       }
     },
     {
@@ -352,15 +341,15 @@
       "category": "일식",
       "avoidCategory": ["튀김"],
       "diet": "나쁨",
-      "drinkType": {"맥주": "normal"},
+      "drinkType": {"소주": 0, "맥주": 5, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"고기": "strong"},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 10, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"든든": "normal"},
-        "condition": {"멀쩡": "normal"},
-        "weather": {}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     },
     {
@@ -370,15 +359,15 @@
       "avoidCategory": ["일식", "면류"],
       "diet": "좋음",
       "mood": "색다른",
-      "drinkType": {},
+      "drinkType": {"소주": 0, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"면": "strong"},
-        "soup": "strong",
+        "foodType": {"밥": 0, "면": 10, "빵": 0, "고기": 0, "생선": 0},
+        "soup": 10,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"보통": "normal"},
-        "condition": {"피곤": "normal"},
-        "weather": {"추움": "normal", "비": "normal"}
+        "amount": {"가볍": 0, "보통": 10, "든든": 0},
+        "condition": {"피곤": 10, "멀쩡": 5, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 5, "비": 5}
       }
     },
     {
@@ -388,15 +377,15 @@
       "avoidCategory": ["양식", "면류"],
       "diet": "보통",
       "mood": "색다른",
-      "drinkType": {"와인": "strong"},
+      "drinkType": {"소주": 0, "맥주": 0, "막걸리": 0, "와인·양주": 10},
       "isSnack": false,
       "tags": {
-        "foodType": {"면": "strong"},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 10, "빵": 0, "고기": 0, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"보통": "normal"},
-        "condition": {"멀쩡": "normal"},
-        "weather": {}
+        "amount": {"가볍": 0, "보통": 10, "든든": 0},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     },
     {
@@ -407,15 +396,15 @@
       "diet": "보통",
       "meatType": "소",
       "mood": "색다른",
-      "drinkType": {"와인": "strong"},
+      "drinkType": {"소주": 0, "맥주": 0, "막걸리": 0, "와인·양주": 10},
       "isSnack": "안주",
       "tags": {
-        "foodType": {"고기": "strong"},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 10, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"든든": "strong"},
-        "condition": {"멀쩡": "strong"},
-        "weather": {}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     },
     {
@@ -425,15 +414,15 @@
       "avoidCategory": ["양식"],
       "diet": "좋음",
       "mood": "색다른",
-      "drinkType": {},
+      "drinkType": {"소주": 0, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"밥": "strong"},
-        "soup": "none",
+        "foodType": {"밥": 10, "면": 0, "빵": 10, "고기": 0, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"가볍": "strong"},
-        "condition": {"멀쩡": "strong"},
-        "weather": {"더움": "strong"}
+        "amount": {"가볍": 10, "보통": 0, "든든": 0},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 10, "추움": 0, "비": 0}
       }
     },
     {
@@ -442,15 +431,15 @@
       "category": "양식",
       "avoidCategory": ["양식", "햄버거"],
       "diet": "나쁨",
-      "drinkType": {"맥주": "strong"},
+      "drinkType": {"소주": 0, "맥주": 10, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"빵": "strong", "고기": "normal"},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 0, "빵": 10, "고기": 10, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"든든": "normal"},
-        "condition": {"멀쩡": "normal"},
-        "weather": {}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     },
     {
@@ -461,15 +450,15 @@
       "subItems": ["떡볶이", "김밥", "라면"],
       "diet": "나쁨",
       "mood": "편한",
-      "drinkType": {},
+      "drinkType": {"소주": 0, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"면": "normal", "밥": "normal"},
-        "soup": "normal",
+        "foodType": {"밥": 5, "면": 10, "빵": 0, "고기": 0, "생선": 0},
+        "soup": 5,
         "spicy": {"안매움": 0, "보통": 10, "매움": 0},
-        "amount": {"보통": "normal"},
-        "condition": {"스트레스": "strong", "피곤": "normal"},
-        "weather": {"추움": "normal", "비": "strong"}
+        "amount": {"가볍": 0, "보통": 10, "든든": 0},
+        "condition": {"피곤": 5, "멀쩡": 0, "스트레스": 10},
+        "weather": {"더움": 0, "추움": 5, "비": 10}
       }
     },
     {
@@ -479,15 +468,15 @@
       "avoidCategory": ["치킨", "튀김"],
       "diet": "나쁨",
       "meatType": "닭",
-      "drinkType": {"맥주": "strong"},
+      "drinkType": {"소주": 0, "맥주": 10, "막걸리": 0, "와인·양주": 0},
       "isSnack": "안주",
       "tags": {
-        "foodType": {"고기": "strong"},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 10, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"든든": "normal"},
-        "condition": {"멀쩡": "strong"},
-        "weather": {}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     },
     {
@@ -496,15 +485,15 @@
       "category": "피자",
       "avoidCategory": ["피자"],
       "diet": "나쁨",
-      "drinkType": {"맥주": "normal"},
+      "drinkType": {"소주": 0, "맥주": 10, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"빵": "strong"},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 0, "빵": 10, "고기": 0, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"든든": "normal"},
-        "condition": {"멀쩡": "normal"},
-        "weather": {}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 10},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     },
     {
@@ -514,15 +503,15 @@
       "avoidCategory": ["안주", "고기구이"],
       "diet": "나쁨",
       "meatType": "소",
-      "drinkType": {"소주": "strong"},
+      "drinkType": {"소주": 10, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": "안주(전용)",
       "tags": {
-        "foodType": {"고기": "normal"},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 10, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"든든": "normal"},
-        "condition": {"스트레스": "strong"},
-        "weather": {}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 0, "멀쩡": 0, "스트레스": 10},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     },
     {
@@ -531,15 +520,15 @@
       "category": "안주",
       "avoidCategory": ["안주"],
       "diet": "좋음",
-      "drinkType": {"소주": "strong"},
+      "drinkType": {"소주": 10, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": "안주(전용)",
       "tags": {
-        "foodType": {},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 0, "생선": 10},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"가볍": "strong"},
-        "condition": {"멀쩡": "strong"},
-        "weather": {"더움": "normal"}
+        "amount": {"가볍": 10, "보통": 0, "든든": 0},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 5, "추움": 0, "비": 0}
       }
     },
     {
@@ -549,15 +538,15 @@
       "avoidCategory": ["안주"],
       "diet": "좋음",
       "meatType": "닭",
-      "drinkType": {"맥주": "strong", "소주": "normal"},
+      "drinkType": {"소주": 5, "맥주": 10, "막걸리": 0, "와인·양주": 0},
       "isSnack": "안주(전용)",
       "tags": {
-        "foodType": {"고기": "normal"},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 10, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"가볍": "strong"},
-        "condition": {"멀쩡": "normal"},
-        "weather": {}
+        "amount": {"가볍": 10, "보통": 0, "든든": 0},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     },
     {
@@ -566,15 +555,15 @@
       "category": "안주",
       "avoidCategory": ["안주"],
       "diet": "나쁨",
-      "drinkType": {"막걸리": "strong"},
+      "drinkType": {"소주": 0, "맥주": 0, "막걸리": 10, "와인·양주": 0},
       "isSnack": "안주(전용)",
       "tags": {
-        "foodType": {},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 0, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"보통": "normal"},
-        "condition": {},
-        "weather": {"비": "strong"}
+        "amount": {"가볍": 0, "보통": 10, "든든": 0},
+        "condition": {"피곤": 0, "멀쩡": 0, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 0, "비": 10}
       }
     },
     {
@@ -583,15 +572,15 @@
       "category": "안주",
       "avoidCategory": ["안주"],
       "diet": "나쁨",
-      "drinkType": {"소주": "strong", "맥주": "normal"},
+      "drinkType": {"소주": 10, "맥주": 5, "막걸리": 0, "와인·양주": 0},
       "isSnack": "안주(전용)",
       "tags": {
-        "foodType": {},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 0, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 0, "보통": 10, "매움": 0},
-        "amount": {"보통": "normal"},
-        "condition": {"스트레스": "strong"},
-        "weather": {}
+        "amount": {"가볍": 0, "보통": 10, "든든": 0},
+        "condition": {"피곤": 0, "멀쩡": 0, "스트레스": 10},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     },
     {
@@ -602,15 +591,15 @@
       "diet": "나쁨",
       "meatType": "소",
       "mood": "색다른",
-      "drinkType": {"소주": "strong", "맥주": "normal"},
+      "drinkType": {"소주": 10, "맥주": 5, "막걸리": 0, "와인·양주": 0},
       "isSnack": "안주",
       "tags": {
-        "foodType": {"고기": "strong"},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 10, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"든든": "strong"},
-        "condition": {"멀쩡": "strong"},
-        "weather": {}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     },
     {
@@ -621,15 +610,15 @@
       "diet": "보통",
       "meatType": "소",
       "mood": "색다른",
-      "drinkType": {"소주": "strong"},
+      "drinkType": {"소주": 10, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": "안주(전용)",
       "tags": {
-        "foodType": {"고기": "strong"},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 10, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"가볍": "strong"},
-        "condition": {"멀쩡": "strong"},
-        "weather": {}
+        "amount": {"가볍": 10, "보통": 0, "든든": 0},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     },
     {
@@ -640,15 +629,15 @@
       "diet": "좋음",
       "meatType": "양",
       "mood": "색다른",
-      "drinkType": {"소주": "normal"},
+      "drinkType": {"소주": 5, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"고기": "normal"},
-        "soup": "strong",
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 10, "생선": 0},
+        "soup": 10,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"든든": "normal"},
-        "condition": {"피곤": "strong"},
-        "weather": {"추움": "strong"}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 10, "멀쩡": 0, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 10, "비": 0}
       }
     },
     {
@@ -658,15 +647,15 @@
       "avoidCategory": ["면류"],
       "diet": "보통",
       "mood": "편한",
-      "drinkType": {},
+      "drinkType": {"소주": 0, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"면": "strong"},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 10, "빵": 0, "고기": 0, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 0, "보통": 0, "매움": 10},
-        "amount": {"보통": "normal"},
-        "condition": {"스트레스": "normal"},
-        "weather": {"더움": "normal"}
+        "amount": {"가볍": 0, "보통": 10, "든든": 0},
+        "condition": {"피곤": 0, "멀쩡": 0, "스트레스": 10},
+        "weather": {"더움": 10, "추움": 0, "비": 0}
       }
     },
     {
@@ -676,15 +665,15 @@
       "avoidCategory": ["찜"],
       "diet": "보통",
       "mood": "색다른",
-      "drinkType": {"소주": "strong"},
+      "drinkType": {"소주": 10, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": "안주",
       "tags": {
-        "foodType": {"고기": "normal"},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 0, "생선": 10},
+        "soup": 0,
         "spicy": {"안매움": 0, "보통": 0, "매움": 10},
-        "amount": {"든든": "normal"},
-        "condition": {"스트레스": "strong"},
-        "weather": {"추움": "normal"}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 0, "멀쩡": 0, "스트레스": 10},
+        "weather": {"더움": 0, "추움": 5, "비": 0}
       }
     },
     {
@@ -695,15 +684,15 @@
       "diet": "나쁨",
       "meatType": "돼지",
       "mood": "편한",
-      "drinkType": {"소주": "normal"},
+      "drinkType": {"소주": 5, "맥주": 0, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"고기": "normal"},
-        "soup": "strong",
+        "foodType": {"밥": 0, "면": 0, "빵": 0, "고기": 10, "생선": 0},
+        "soup": 10,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"든든": "strong"},
-        "condition": {"피곤": "normal"},
-        "weather": {"추움": "strong", "비": "normal"}
+        "amount": {"가볍": 0, "보통": 0, "든든": 10},
+        "condition": {"피곤": 10, "멀쩡": 0, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 10, "비": 5}
       }
     },
     {
@@ -713,15 +702,15 @@
       "avoidCategory": ["양식"],
       "diet": "보통",
       "mood": "색다른",
-      "drinkType": {"맥주": "normal"},
+      "drinkType": {"소주": 0, "맥주": 5, "막걸리": 0, "와인·양주": 0},
       "isSnack": false,
       "tags": {
-        "foodType": {"빵": "strong", "고기": "normal"},
-        "soup": "none",
+        "foodType": {"밥": 0, "면": 0, "빵": 10, "고기": 10, "생선": 0},
+        "soup": 0,
         "spicy": {"안매움": 10, "보통": 0, "매움": 0},
-        "amount": {"보통": "normal"},
-        "condition": {"멀쩡": "normal"},
-        "weather": {}
+        "amount": {"가볍": 0, "보통": 10, "든든": 0},
+        "condition": {"피곤": 0, "멀쩡": 10, "스트레스": 0},
+        "weather": {"더움": 0, "추움": 0, "비": 0}
       }
     }
   ]

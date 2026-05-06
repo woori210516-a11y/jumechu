@@ -1,19 +1,14 @@
 import type { Answers, Menu, ScoredMenu } from '@/app/types';
 
 const WEIGHTS = {
-  drinkType: 6,
+  drinkType: 5,
   foodType: 5,
   spicy: 5,
   condition: 2,
   weather: 2,
-  soup: 2,
-  amount: 1,
+  soup: 5,
+  amount: 3,
   mood: 3,
-};
-
-const GRADE: Record<string, number> = {
-  strong: 2,
-  normal: 1,
 };
 
 const conditionMap: Record<string, string> = {
@@ -33,6 +28,7 @@ const foodTypeMap: Record<string, string> = {
   '면': '면',
   '빵': '빵',
   '고기': '고기',
+  '생선': '생선',
 };
 
 const spicyMap: Record<string, string> = {
@@ -50,20 +46,14 @@ const drinkTypeMap: Record<string, string> = {
   '소주': '소주',
   '맥주': '맥주',
   '막걸리': '막걸리',
-  '와인·양주': '와인',
+  '와인·양주': '와인·양주',
 };
 
-function scoreTag(
-  tagObj: Record<string, string>,
-  key: string,
-  weight: number
-): number {
-  const grade = tagObj[key];
-  return grade ? weight * (GRADE[grade] ?? 0) : 0;
+function scoreNumeric(tagObj: Record<string, number>, key: string, weight: number): number {
+  return ((tagObj[key] ?? 0) * weight) / 10;
 }
 
 export function calculateScore(menu: Menu, answers: Answers): number {
-  // Exclusion rules
   if (answers.drink === '안 마심' && menu.isSnack === '안주(전용)') {
     return Number.NEGATIVE_INFINITY;
   }
@@ -81,45 +71,38 @@ export function calculateScore(menu: Menu, answers: Answers): number {
 
   let score = 0;
 
-  // Diet moderate penalty
   if (answers.diet === '적당히 신경씀' && menu.diet === '나쁨') {
     score -= 3;
   }
 
-  // Condition
   if (answers.condition && answers.condition !== '상관없음') {
     const key = conditionMap[answers.condition];
-    if (key) score += scoreTag(menu.tags.condition, key, WEIGHTS.condition);
+    if (key) score += scoreNumeric(menu.tags.condition, key, WEIGHTS.condition);
   }
 
-  // Weather
   if (answers.weather && answers.weather !== '상관없음') {
     const key = weatherMap[answers.weather];
-    if (key) score += scoreTag(menu.tags.weather, key, WEIGHTS.weather);
+    if (key) score += scoreNumeric(menu.tags.weather, key, WEIGHTS.weather);
   }
 
-  // Food type (multi-select — take best matching score)
   if (answers.foodType && !answers.foodType.includes('상관없음') && answers.foodType.length > 0) {
     let best = 0;
     for (const ft of answers.foodType) {
       const key = foodTypeMap[ft];
-      if (key) best = Math.max(best, scoreTag(menu.tags.foodType, key, WEIGHTS.foodType));
+      if (key) best = Math.max(best, scoreNumeric(menu.tags.foodType, key, WEIGHTS.foodType));
     }
     score += best;
   }
 
-  // Soup — binary exclusion
   if (answers.soup && answers.soup !== '상관없음') {
-    const hasSoup = menu.tags.soup === 'normal' || menu.tags.soup === 'strong';
-    if (answers.soup === '없는 거' && hasSoup) return Number.NEGATIVE_INFINITY;
-    if (answers.soup === '있는 거' && !hasSoup) return Number.NEGATIVE_INFINITY;
-    // '있는 거' 선택 시 국물이 많을수록 가산점
+    const soupValue = menu.tags.soup;
+    if (answers.soup === '없는 거' && soupValue > 0) return Number.NEGATIVE_INFINITY;
+    if (answers.soup === '있는 거' && soupValue === 0) return Number.NEGATIVE_INFINITY;
     if (answers.soup === '있는 거') {
-      score += WEIGHTS.soup * (GRADE[menu.tags.soup] ?? 0);
+      score += (soupValue * WEIGHTS.soup) / 10;
     }
   }
 
-  // Spicy — spicy 값이 0이면 제외, 아니면 값 × 가중치 / 10 점수 반영
   if (answers.spicy && answers.spicy !== '상관없음') {
     const key = spicyMap[answers.spicy];
     if (key) {
@@ -129,23 +112,16 @@ export function calculateScore(menu: Menu, answers: Answers): number {
     }
   }
 
-  // Amount
   if (answers.amount && answers.amount !== '상관없음') {
     const key = amountMap[answers.amount];
-    if (key) score += scoreTag(menu.tags.amount, key, WEIGHTS.amount);
+    if (key) score += scoreNumeric(menu.tags.amount, key, WEIGHTS.amount);
   }
 
-  // Drink type (only when drinking)
-  if (
-    answers.drink === '마심' &&
-    answers.drinkType &&
-    answers.drinkType !== '상관없음'
-  ) {
+  if (answers.drink === '마심' && answers.drinkType && answers.drinkType !== '상관없음') {
     const key = drinkTypeMap[answers.drinkType];
-    if (key) score += scoreTag(menu.drinkType, key, WEIGHTS.drinkType);
+    if (key) score += scoreNumeric(menu.drinkType, key, WEIGHTS.drinkType);
   }
 
-  // Mood
   if (answers.mood && answers.mood !== '상관없음') {
     const moodKey = answers.mood === '익숙하고 편한 거' ? '편한' : '색다른';
     if (menu.mood === moodKey) {
@@ -153,7 +129,6 @@ export function calculateScore(menu: Menu, answers: Answers): number {
     }
   }
 
-  // Meat type (only when 고기 selected in foodType)
   if (
     answers.foodType?.includes('고기') &&
     answers.meatType &&
