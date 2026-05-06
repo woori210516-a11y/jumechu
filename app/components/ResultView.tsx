@@ -2,7 +2,12 @@
 
 import { useState } from 'react';
 import CharacterImage from '@/app/components/CharacterImage';
-import type { ScoredMenu } from '@/app/types';
+import type { Menu, ScoredMenu } from '@/app/types';
+
+function getNaverMapUrl(menu: Menu): string {
+  const keyword = menu.subItems ? menu.category : menu.name;
+  return `https://map.naver.com/search/내주변+${encodeURIComponent(keyword)}`;
+}
 
 interface ResultViewProps {
   results: ScoredMenu[];
@@ -80,13 +85,21 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
             </p>
           </div>
         )}
-        <div className="mt-2 flex gap-2">
+        <div className="mt-2 flex gap-2 items-center">
           <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full">
             {first.menu.category}
           </span>
           <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full">
             다이어트 {first.menu.diet}
           </span>
+          <a
+            href={getNaverMapUrl(first.menu)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full active:scale-95 transition-transform"
+          >
+            지도 🗺️
+          </a>
         </div>
       </div>
 
@@ -135,13 +148,21 @@ function AlternativeCard({ rank, item }: { rank: number; item: ScoredMenu }) {
       {item.menu.subItems && item.menu.subItems.length > 0 && (
         <p className="mt-1 text-xs text-gray-500">{item.menu.subItems.join(' / ')}</p>
       )}
-      <div className="mt-2 flex gap-1.5">
+      <div className="mt-2 flex gap-1.5 items-center">
         <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
           {item.menu.category}
         </span>
         <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
           다이어트 {item.menu.diet}
         </span>
+        <a
+          href={getNaverMapUrl(item.menu)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full active:scale-95 transition-transform"
+        >
+          지도 🗺️
+        </a>
       </div>
     </div>
   );
