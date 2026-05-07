@@ -12,9 +12,12 @@ const WEIGHTS = {
 };
 
 const conditionMap: Record<string, string> = {
-  '피곤함': '피곤',
+  '날아다님': '멀쩡',
   '멀쩡함': '멀쩡',
-  '스트레스받음': '스트레스',
+  '피곤함': '피곤',
+  '쓰러지기직전': '피곤',
+  // '이미사망' — 별도 처리, 점수 계산 스킵
+  // '스트레스' 태그는 menus.json에 존재하지만 계산에서 제외
 };
 
 const weatherMap: Record<string, string> = {

@@ -4,7 +4,7 @@ export const questions: Question[] = [
   {
     id: 'condition',
     text: '오늘 컨디션은 어때?',
-    options: ['피곤함', '멀쩡함', '스트레스받음', '상관없음'],
+    options: ['날아다님', '멀쩡함', '피곤함', '쓰러지기직전', '이미사망'],
     type: 'single',
   },
   {
