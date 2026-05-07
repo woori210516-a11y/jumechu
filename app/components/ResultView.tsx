@@ -4,9 +4,61 @@ import { useState } from 'react';
 import CharacterImage from '@/app/components/CharacterImage';
 import type { Menu, ScoredMenu } from '@/app/types';
 
+function getKeyword(menu: Menu): string {
+  return menu.subItems ? menu.category : menu.name;
+}
+
 function getNaverMapUrl(menu: Menu): string {
-  const keyword = menu.subItems ? menu.category : menu.name;
-  return `https://map.naver.com/search/내주변+${encodeURIComponent(keyword)}`;
+  const keyword = getKeyword(menu);
+  const isMobile = /iPhone|iPad|Android/i.test(
+    typeof navigator !== 'undefined' ? navigator.userAgent : ''
+  );
+  return isMobile
+    ? `https://m.map.naver.com/search?query=${encodeURIComponent(keyword)}`
+    : `https://map.naver.com/search/${encodeURIComponent(keyword)}`;
+}
+
+function getKakaoMapUrl(menu: Menu): string {
+  return `https://map.kakao.com/?q=${encodeURIComponent(getKeyword(menu))}`;
+}
+
+interface MapButtonsProps {
+  menu: Menu;
+  variant: 'light' | 'dark'; // dark = 1위 카드(그라디언트), light = 2·3위 카드
+}
+
+function MapButtons({ menu, variant }: MapButtonsProps) {
+  const isDark = variant === 'dark';
+  const naverCls = isDark
+    ? 'border border-lime-200 text-lime-100'
+    : 'border border-orange-400 text-orange-500';
+  const kakaoCls = isDark
+    ? 'border border-yellow-200 text-yellow-100'
+    : 'border border-yellow-400 text-yellow-600';
+  const dividerCls = isDark ? 'border-white/20' : 'border-orange-200';
+
+  return (
+    <div className={`mt-3 pt-3 border-t ${dividerCls} flex gap-2`}>
+      <a
+        href={getNaverMapUrl(menu)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`flex-1 inline-flex items-center justify-center gap-1.5 ${naverCls} text-sm font-semibold px-3 py-1.5 rounded-xl active:scale-95 transition-all`}
+      >
+        <img src="https://www.naver.com/favicon.ico" alt="" className="w-4 h-4 rounded-sm" />
+        네이버지도
+      </a>
+      <a
+        href={getKakaoMapUrl(menu)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`flex-1 inline-flex items-center justify-center gap-1.5 ${kakaoCls} text-sm font-semibold px-3 py-1.5 rounded-xl active:scale-95 transition-all`}
+      >
+        <img src="https://map.kakao.com/favicon.ico" alt="" className="w-4 h-4 rounded-sm" />
+        카카오맵
+      </a>
+    </div>
+  );
 }
 
 interface ResultViewProps {
@@ -93,17 +145,7 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
             다이어트 {first.menu.diet}
           </span>
         </div>
-        <div className="mt-3 pt-3 border-t border-white/20">
-          <a
-            href={getNaverMapUrl(first.menu)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 border border-white text-white text-sm font-semibold px-3 py-1.5 rounded-xl active:scale-95 transition-all"
-          >
-            <img src="https://www.naver.com/favicon.ico" alt="" className="w-4 h-4 rounded-sm" />
-            내 주변 맛집 찾기
-          </a>
-        </div>
+        <MapButtons menu={first.menu} variant="dark" />
       </div>
 
       {(second || third) && (
@@ -159,17 +201,7 @@ function AlternativeCard({ rank, item }: { rank: number; item: ScoredMenu }) {
           다이어트 {item.menu.diet}
         </span>
       </div>
-      <div className="mt-3 pt-3 border-t border-orange-200">
-        <a
-          href={getNaverMapUrl(item.menu)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 border border-orange-400 text-orange-500 text-sm font-semibold px-3 py-1.5 rounded-xl active:scale-95 transition-all"
-        >
-          <img src="https://www.naver.com/favicon.ico" alt="" className="w-4 h-4 rounded-sm" />
-          내 주변 맛집 찾기
-        </a>
-      </div>
+      <MapButtons menu={item.menu} variant="light" />
     </div>
   );
 }
