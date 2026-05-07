@@ -92,13 +92,16 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
           <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full">
             다이어트 {first.menu.diet}
           </span>
+        </div>
+        <div className="mt-3 pt-3 border-t border-white/20">
           <a
             href={getNaverMapUrl(first.menu)}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full active:scale-95 transition-transform"
+            className="inline-flex items-center gap-1.5 border border-white text-white text-sm font-semibold px-3 py-1.5 rounded-xl active:scale-95 transition-all"
           >
-            지도 🗺️
+            <img src="https://www.naver.com/favicon.ico" alt="" className="w-4 h-4 rounded-sm" />
+            내 주변 맛집 찾기
           </a>
         </div>
       </div>
@@ -155,13 +158,16 @@ function AlternativeCard({ rank, item }: { rank: number; item: ScoredMenu }) {
         <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
           다이어트 {item.menu.diet}
         </span>
+      </div>
+      <div className="mt-3 pt-3 border-t border-orange-200">
         <a
           href={getNaverMapUrl(item.menu)}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full active:scale-95 transition-transform"
+          className="inline-flex items-center gap-1.5 border border-orange-400 text-orange-500 text-sm font-semibold px-3 py-1.5 rounded-xl active:scale-95 transition-all"
         >
-          지도 🗺️
+          <img src="https://www.naver.com/favicon.ico" alt="" className="w-4 h-4 rounded-sm" />
+          내 주변 맛집 찾기
         </a>
       </div>
     </div>
