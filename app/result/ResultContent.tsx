@@ -1,15 +1,18 @@
 'use client';
 
-import { useSearchParams, useRouter } from 'next/navigation';
+import { use } from 'react';
+import { useRouter } from 'next/navigation';
 import ResultView from '@/app/components/ResultView';
 import { parseShareParam } from '@/app/lib/share';
 import menusData from '@/data/menus.json';
 
-export default function ResultContent() {
-  const searchParams = useSearchParams();
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+export default function ResultContent({ searchParams }: { searchParams: SearchParams }) {
+  const params = use(searchParams);
   const router = useRouter();
 
-  const q = searchParams.get('q') ?? '';
+  const q = typeof params.q === 'string' ? params.q : '';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const results = parseShareParam(q, menusData.menus as any);
 

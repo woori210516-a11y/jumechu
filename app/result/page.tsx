@@ -24,10 +24,24 @@ export async function generateMetadata({
   };
 }
 
-export default function Page() {
+function LoadingFallback() {
   return (
-    <Suspense>
-      <ResultContent />
+    <main className="min-h-screen flex justify-center items-start">
+      <div className="w-full max-w-[390px] min-h-screen bg-white flex flex-col items-center justify-center shadow-2xl shadow-rose-200/50">
+        <p className="text-gray-400 text-sm">불러오는 중...</p>
+      </div>
+    </main>
+  );
+}
+
+export default function Page({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <ResultContent searchParams={searchParams} />
     </Suspense>
   );
 }
