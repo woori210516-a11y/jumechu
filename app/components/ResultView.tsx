@@ -24,18 +24,18 @@ function getKakaoMapUrl(menu: Menu): string {
 
 interface MapButtonsProps {
   menu: Menu;
-  variant: 'light' | 'dark'; // dark = 1위 카드(그라디언트), light = 2·3위 카드
+  variant: 'light' | 'dark';
 }
 
 function MapButtons({ menu, variant }: MapButtonsProps) {
   const isDark = variant === 'dark';
   const naverCls = isDark
     ? 'border border-lime-200 text-lime-100'
-    : 'border border-orange-400 text-orange-500';
+    : 'border border-gray-200 text-gray-500';
   const kakaoCls = isDark
     ? 'border border-yellow-200 text-yellow-100'
-    : 'border border-yellow-400 text-yellow-600';
-  const dividerCls = isDark ? 'border-white/20' : 'border-orange-200';
+    : 'border border-yellow-300 text-yellow-600';
+  const dividerCls = isDark ? 'border-white/20' : 'border-gray-100';
 
   return (
     <div className={`mt-3 pt-3 border-t ${dividerCls} flex gap-2`}>
@@ -43,18 +43,18 @@ function MapButtons({ menu, variant }: MapButtonsProps) {
         href={getNaverMapUrl(menu)}
         target="_blank"
         rel="noopener noreferrer"
-        className={`flex-1 inline-flex items-center justify-center gap-1.5 ${naverCls} text-sm font-semibold px-3 py-1.5 rounded-xl active:scale-95 transition-all`}
+        className={`flex-1 inline-flex items-center justify-center gap-1.5 ${naverCls} text-xs font-semibold px-3 py-2 rounded-xl active:scale-95 transition-all`}
       >
-        <img src="https://www.naver.com/favicon.ico" alt="" className="w-4 h-4 rounded-sm" />
+        <img src="https://www.naver.com/favicon.ico" alt="" className="w-3.5 h-3.5 rounded-sm" />
         네이버지도
       </a>
       <a
         href={getKakaoMapUrl(menu)}
         target="_blank"
         rel="noopener noreferrer"
-        className={`flex-1 inline-flex items-center justify-center gap-1.5 ${kakaoCls} text-sm font-semibold px-3 py-1.5 rounded-xl active:scale-95 transition-all`}
+        className={`flex-1 inline-flex items-center justify-center gap-1.5 ${kakaoCls} text-xs font-semibold px-3 py-2 rounded-xl active:scale-95 transition-all`}
       >
-        <img src="https://map.kakao.com/favicon.ico" alt="" className="w-4 h-4 rounded-sm" />
+        <img src="https://map.kakao.com/favicon.ico" alt="" className="w-3.5 h-3.5 rounded-sm" />
         카카오맵
       </a>
     </div>
@@ -66,9 +66,10 @@ interface ResultViewProps {
   showFunnyMessage: boolean;
   shareUrl?: string;
   onRestart: () => void;
+  isDead?: boolean;
 }
 
-export default function ResultView({ results, showFunnyMessage, shareUrl, onRestart }: ResultViewProps) {
+export default function ResultView({ results, showFunnyMessage, shareUrl, onRestart, isDead }: ResultViewProps) {
   const [copied, setCopied] = useState(false);
 
   async function handleShare() {
@@ -78,23 +79,75 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
     setTimeout(() => setCopied(false), 2500);
   }
 
+  // 이미사망 특별 화면
+  if (isDead) {
+    return (
+      <div className="flex flex-col flex-1 px-5 pt-8 pb-6 gap-5 animate-fade-slide">
+        <div className="flex flex-col items-center gap-3">
+          <CharacterImage size={72} />
+          <div className="text-center">
+            <p className="text-lg font-bold text-gray-800">과로로 사망하셨습니다</p>
+            <p className="mt-1 text-gray-400 text-sm">다음 생에는 건물주로 태어나시길</p>
+          </div>
+        </div>
+        <div className="bg-gray-800 rounded-3xl p-5 shadow-lg animate-pop">
+          <span className="text-xs font-semibold text-gray-400 bg-white/10 px-2.5 py-1 rounded-full">
+            영결식 추천 메뉴
+          </span>
+          <p className="text-2xl font-bold text-white mt-3">육개장</p>
+          <p className="text-gray-400 text-sm mt-1">故人의 마지막 식사.. 맛있게 드세요</p>
+        </div>
+        <div className="mt-auto pt-2">
+          <button
+            onClick={onRestart}
+            className="w-full py-4 rounded-2xl border border-gray-200 text-gray-500 font-semibold text-base active:scale-95 hover:bg-gray-50 transition-all"
+          >
+            다시 고르기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 결과 없음
   if (results.length === 0) {
     return (
-      <div className="flex flex-col flex-1 items-center justify-center px-6 gap-6 animate-fade-slide">
-        <CharacterImage size={100} />
-        <div className="text-center">
-          <p className="text-2xl font-bold text-gray-800">😅 이런...</p>
-          <p className="mt-2 text-gray-500">
-            조건에 맞는 메뉴를 못 찾겠어ㅠㅠ
-            <br />
-            조건을 조금 바꿔서 다시 해볼까?
-          </p>
+      <div className="flex flex-col flex-1 items-center justify-center px-6 gap-8 animate-fade-slide">
+        <div className="flex flex-col items-center gap-5">
+          <CharacterImage size={88} />
+          <div className="text-center">
+            <p className="text-xl font-bold text-gray-800">조건에 맞는 메뉴가 없어</p>
+            <p className="mt-2 text-gray-400 text-sm leading-relaxed">
+              조건을 조금 바꿔서 다시 해볼까?
+            </p>
+          </div>
         </div>
         <button
           onClick={onRestart}
-          className="w-full py-4 rounded-2xl bg-gradient-to-r from-rose-400 to-orange-400 text-white font-bold text-lg shadow-lg shadow-rose-200 active:scale-95 transition-transform"
+          className="w-full py-4 rounded-2xl bg-orange-400 text-white font-bold text-base shadow-lg shadow-orange-100 active:scale-95 transition-transform"
         >
-          다시 고르기 🔄
+          다시 고르기
+        </button>
+      </div>
+    );
+  }
+
+  // 최고 점수 2점 이하
+  if (results[0].score <= 2) {
+    return (
+      <div className="flex flex-col flex-1 items-center justify-center px-6 gap-8 animate-fade-slide">
+        <div className="flex flex-col items-center gap-5">
+          <CharacterImage size={88} />
+          <div className="text-center">
+            <p className="text-xl font-bold text-gray-800">오늘은 그냥 햇반이나 드세요</p>
+            <p className="mt-2 text-gray-400 text-sm">아님 걍 굶던가..</p>
+          </div>
+        </div>
+        <button
+          onClick={onRestart}
+          className="w-full py-4 rounded-2xl border border-orange-200 text-orange-400 font-semibold text-base active:scale-95 hover:bg-orange-50 transition-all"
+        >
+          다시 고르기
         </button>
       </div>
     );
@@ -103,75 +156,82 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
   const [first, second, third] = results;
 
   return (
-    <div className="flex flex-col flex-1 px-5 pt-8 pb-6 gap-5 animate-fade-slide">
-      <div className="flex flex-col items-center gap-3">
-        <CharacterImage size={80} />
-        <h2 className="text-xl font-bold text-gray-800">오늘 메뉴 추천!</h2>
+    <div className="flex flex-col flex-1 px-5 pt-7 pb-6 gap-5 animate-fade-slide">
+      {/* 헤더 */}
+      <div className="flex items-center gap-3">
+        <CharacterImage size={40} className="shrink-0" />
+        <div>
+          <p className="text-xs text-gray-400 font-medium">오늘의 메뉴 추천</p>
+          <p className="text-base font-bold text-gray-800 leading-tight">딱 맞는 메뉴 찾았어!</p>
+        </div>
       </div>
 
       {showFunnyMessage && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-4 py-3 animate-pop">
-          <p className="text-sm text-yellow-800 font-medium">
-            😂 여보 다이어트중인데 술 골랐네..? 오늘 치팅데이야?
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 animate-pop">
+          <p className="text-sm text-amber-700 font-medium">
+            다이어트 중인데 술 골랐네.. 오늘 치팅데이야?
           </p>
         </div>
       )}
 
-      <div className="bg-gradient-to-br from-rose-400 to-orange-400 rounded-3xl p-5 shadow-lg shadow-rose-200 animate-pop">
-        <div className="flex items-start justify-between mb-2">
-          <span className="text-xs font-bold text-rose-100 bg-white/20 px-2 py-0.5 rounded-full">
-            🥇 1위
+      {/* 1위 카드 */}
+      <div className="bg-orange-400 rounded-3xl p-5 shadow-lg shadow-orange-100 animate-pop">
+        <div className="flex items-start justify-between mb-1">
+          <span className="text-xs font-bold text-orange-100 bg-white/20 px-2.5 py-1 rounded-full tracking-wide">
+            1위
           </span>
           {first.score > 0 && (
-            <span className="text-xs text-rose-100">점수 {first.score}</span>
+            <span className="text-xs text-orange-200">점수 {first.score}</span>
           )}
         </div>
-        <p className="text-2xl font-bold text-white mt-1">{first.menu.name}</p>
-        <p className="text-rose-100 text-sm mt-1">
-          오늘은 {first.menu.name} 어때? 딱 맞을 것 같은데 😊
+        <p className="text-2xl font-bold text-white mt-2">{first.menu.name}</p>
+        <p className="text-orange-100 text-sm mt-1">
+          오늘은 {first.menu.name} 어때?
         </p>
         {first.menu.subItems && first.menu.subItems.length > 0 && (
-          <div className="mt-3 bg-white/20 rounded-2xl px-3 py-2">
+          <div className="mt-3 bg-white/15 rounded-2xl px-3 py-2">
             <p className="text-white text-xs font-medium">
-              {first.menu.subItems.join(', ')} 중에 골라봐!
+              {first.menu.subItems.join(', ')} 중에 골라봐
             </p>
           </div>
         )}
-        <div className="mt-2 flex gap-2 items-center">
-          <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full">
+        <div className="mt-2.5 flex gap-1.5 flex-wrap">
+          <span className="text-xs bg-white/20 text-white px-2.5 py-1 rounded-full">
             {first.menu.category}
           </span>
-          <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full">
+          <span className="text-xs bg-white/20 text-white px-2.5 py-1 rounded-full">
             다이어트 {first.menu.diet}
           </span>
         </div>
         <MapButtons menu={first.menu} variant="dark" />
       </div>
 
+      {/* 2·3위 */}
       {(second || third) && (
         <div>
-          <p className="text-sm text-gray-400 mb-3 font-medium">아니면 이것도 괜찮아~</p>
-          <div className="flex flex-col gap-3">
+          <p className="text-xs text-gray-400 mb-2.5 font-semibold tracking-wide uppercase">다른 선택지</p>
+          <div className="flex flex-col gap-2.5">
             {second && <AlternativeCard rank={2} item={second} />}
             {third && <AlternativeCard rank={3} item={third} />}
           </div>
         </div>
       )}
 
-      <div className="mt-auto pt-2 flex flex-col gap-3">
+      {/* 하단 버튼 */}
+      <div className="mt-auto pt-2 flex flex-col gap-2.5">
         {shareUrl && (
           <button
             onClick={handleShare}
-            className="w-full py-4 rounded-2xl bg-gradient-to-r from-rose-400 to-orange-400 text-white font-bold text-base shadow-lg shadow-rose-200 active:scale-95 transition-all"
+            className="w-full py-4 rounded-2xl bg-orange-400 text-white font-bold text-base shadow-lg shadow-orange-100 active:scale-95 transition-all"
           >
-            {copied ? '복사 완료! 카톡에 붙여넣으세요. 📋' : '결과 공유하기 🔗'}
+            {copied ? '복사 완료 — 카톡에 붙여넣으세요' : '결과 공유하기'}
           </button>
         )}
         <button
           onClick={onRestart}
-          className="w-full py-4 rounded-2xl border-2 border-orange-300 text-orange-500 font-bold text-base active:scale-95 hover:bg-orange-50 transition-all"
+          className="w-full py-4 rounded-2xl border border-gray-200 text-gray-500 font-semibold text-base active:scale-95 hover:bg-gray-50 transition-all"
         >
-          다시 고르기 🔄
+          다시 고르기
         </button>
       </div>
     </div>
@@ -180,24 +240,24 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
 
 function AlternativeCard({ rank, item }: { rank: number; item: ScoredMenu }) {
   return (
-    <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4">
+    <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-orange-400">
-            {rank === 2 ? '🥈' : '🥉'} {rank}위
+          <span className="text-xs font-bold text-orange-400 bg-orange-50 px-2 py-0.5 rounded-full">
+            {rank}위
           </span>
           <span className="font-bold text-gray-800 text-base">{item.menu.name}</span>
         </div>
-        {item.score > 0 && <span className="text-xs text-gray-400">{item.score}점</span>}
+        {item.score > 0 && <span className="text-xs text-gray-300">{item.score}점</span>}
       </div>
       {item.menu.subItems && item.menu.subItems.length > 0 && (
-        <p className="mt-1 text-xs text-gray-500">{item.menu.subItems.join(' / ')}</p>
+        <p className="mt-1 text-xs text-gray-400">{item.menu.subItems.join(' / ')}</p>
       )}
-      <div className="mt-2 flex gap-1.5 items-center">
-        <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
+      <div className="mt-2 flex gap-1.5 flex-wrap">
+        <span className="text-xs bg-gray-50 text-gray-500 px-2.5 py-1 rounded-full border border-gray-100">
           {item.menu.category}
         </span>
-        <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
+        <span className="text-xs bg-gray-50 text-gray-500 px-2.5 py-1 rounded-full border border-gray-100">
           다이어트 {item.menu.diet}
         </span>
       </div>

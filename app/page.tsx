@@ -23,6 +23,7 @@ export default function Home() {
   const [multiSelect, setMultiSelect] = useState<string[]>([]);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [results, setResults] = useState<ScoredMenu[]>([]);
+  const [isDead, setIsDead] = useState(false);
 
   const activeQuestions = getActiveQuestions(answers.drink, answers.foodType);
   const currentQuestion = activeQuestions[questionIndex];
@@ -48,6 +49,13 @@ export default function Home() {
     const newAnswers: Answers = { ...answers, [currentQuestion.id]: option };
     setHistory((prev) => [...prev, { qIdx: questionIndex, answers }]);
     setAnswers(newAnswers);
+
+    if (currentQuestion.id === 'condition' && option === '이미사망') {
+      setIsDead(true);
+      setView('result');
+      return;
+    }
+
     advance(newAnswers);
   }
 
@@ -99,6 +107,7 @@ export default function Home() {
     setMultiSelect([]);
     setHistory([]);
     setResults([]);
+    setIsDead(false);
   }
 
   const showFunnyMessage = answers.diet === '빡세게 중' && answers.drink === '마심';
@@ -131,8 +140,9 @@ export default function Home() {
           <ResultView
             results={results}
             showFunnyMessage={showFunnyMessage}
-            shareUrl={shareUrl}
+            shareUrl={isDead ? undefined : shareUrl}
             onRestart={restart}
+            isDead={isDead}
           />
         )}
       </div>
@@ -144,22 +154,40 @@ export default function Home() {
 
 function IntroView({ onStart }: { onStart: () => void }) {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center px-6 py-12 gap-8 animate-fade-slide">
-      <div className="flex flex-col items-center gap-4">
-        <CharacterImage size={140} />
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
-            오늘 뭐 먹지? 🍽️
-          </h1>
+    <div className="flex flex-col flex-1 px-6 animate-fade-slide">
+      <div className="flex flex-col flex-1 items-center justify-center gap-10">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative">
+            <div className="w-28 h-28 rounded-full bg-orange-50 flex items-center justify-center shadow-inner shadow-orange-100">
+              <CharacterImage size={112} />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-orange-400 flex items-center justify-center shadow-md">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+              </svg>
+            </div>
+          </div>
+          <div className="text-center">
+            <p className="text-xs font-semibold tracking-widest text-orange-400 uppercase mb-2">주메추</p>
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight leading-tight">
+              오늘 뭐 먹지?
+            </h1>
+            <p className="mt-3 text-gray-400 text-sm leading-relaxed">
+              몇 가지 질문에 답하면<br />딱 맞는 메뉴를 추천해줄게
+            </p>
+          </div>
+        </div>
+
+        <div className="w-full flex flex-col gap-3">
+          <button
+            onClick={onStart}
+            className="w-full py-4 rounded-2xl bg-orange-400 text-white text-base font-bold tracking-wide shadow-lg shadow-orange-200 active:scale-95 transition-transform"
+          >
+            메뉴 추천받기
+          </button>
+          <p className="text-center text-xs text-gray-300">총 10여 가지 질문 · 1분 이내</p>
         </div>
       </div>
-
-      <button
-        onClick={onStart}
-        className="w-full py-4 rounded-2xl bg-gradient-to-r from-rose-400 to-orange-400 text-white text-lg font-bold shadow-lg shadow-rose-200 active:scale-95 transition-transform"
-      >
-        메뉴 고르기 🎯
-      </button>
     </div>
   );
 }
@@ -192,51 +220,57 @@ function QuizView({
   const progress = (questionNumber / total) * 100;
 
   return (
-    <div className="flex flex-col flex-1 px-5 pt-6 pb-6 gap-4 animate-fade-slide">
-      {showBack && (
-        <button
-          onClick={onBack}
-          className="self-start flex items-center gap-1 text-sm text-gray-400 font-medium hover:text-gray-600 transition-colors active:scale-95"
-        >
-          ← 이전으로
-        </button>
-      )}
-
+    <div className="flex flex-col flex-1 px-5 pt-5 pb-6 gap-5 animate-fade-slide">
+      {/* 상단 헤더 */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <CharacterImage size={36} />
-          <span className="text-sm font-medium text-gray-500">
-            {questionNumber}/{total}
-          </span>
-        </div>
-        <span className="text-xs text-gray-400 font-medium">
-          {Math.round(progress)}%
+        {showBack ? (
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1.5 text-sm text-gray-400 font-medium active:scale-95 transition-all"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+            이전
+          </button>
+        ) : (
+          <div />
+        )}
+        <span className="text-xs font-semibold text-gray-400 tracking-widest">
+          {questionNumber} / {total}
         </span>
+        <div className="w-10" />
       </div>
 
-      <div className="w-full h-2 bg-orange-100 rounded-full overflow-hidden">
+      {/* 프로그레스 바 */}
+      <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-rose-400 to-orange-400 rounded-full transition-all duration-500 ease-out"
+          className="h-full bg-orange-400 rounded-full transition-all duration-500 ease-out"
           style={{ width: `${progress}%` }}
         />
       </div>
 
-      <div className="mt-1">
-        <p className="text-xl font-bold text-gray-800 leading-snug">
-          {question.text}
-        </p>
-        {question.subText && (
-          <p className="mt-1 text-sm text-gray-400">{question.subText}</p>
-        )}
+      {/* 캐릭터 + 질문 말풍선 */}
+      <div className="flex items-start gap-3 pt-1">
+        <CharacterImage size={40} className="shrink-0 mt-1" />
+        <div className="flex-1 bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm border border-gray-100">
+          <p className="text-base font-bold text-gray-800 leading-snug">
+            {question.text}
+          </p>
+          {question.subText && (
+            <p className="mt-1 text-xs text-gray-400">{question.subText}</p>
+          )}
+        </div>
       </div>
 
+      {/* 선택지 */}
       {question.type === 'single' ? (
-        <div className="flex flex-col gap-3 flex-1">
+        <div className="flex flex-col gap-2.5 flex-1">
           {question.options.map((option) => (
             <button
               key={option}
               onClick={() => onSingleAnswer(option)}
-              className="w-full py-4 px-5 rounded-2xl border-2 border-orange-200 bg-white text-gray-700 font-medium text-base text-left active:scale-95 active:bg-orange-50 hover:border-rose-300 hover:bg-rose-50 transition-all"
+              className="w-full py-3.5 px-5 rounded-2xl bg-white border border-gray-200 text-gray-700 font-medium text-base text-left active:scale-[0.98] active:bg-orange-50 hover:border-orange-300 transition-all shadow-sm"
             >
               {option}
             </button>
@@ -244,17 +278,17 @@ function QuizView({
         </div>
       ) : (
         <div className="flex flex-col gap-3 flex-1">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5">
             {question.options.map((option) => {
               const selected = multiSelect.includes(option);
               return (
                 <button
                   key={option}
                   onClick={() => onToggleMulti(option)}
-                  className={`py-3 px-4 rounded-2xl border-2 font-medium text-sm transition-all active:scale-95 ${
+                  className={`py-3 px-4 rounded-2xl border font-medium text-sm transition-all active:scale-95 ${
                     selected
-                      ? 'border-rose-400 bg-gradient-to-br from-rose-400 to-orange-400 text-white shadow-md shadow-rose-200'
-                      : 'border-orange-200 bg-white text-gray-700 hover:border-rose-300 hover:bg-rose-50'
+                      ? 'border-orange-400 bg-orange-400 text-white shadow-md shadow-orange-100'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-orange-300 shadow-sm'
                   }`}
                 >
                   {option}
@@ -266,9 +300,9 @@ function QuizView({
             <button
               onClick={onMultiConfirm}
               disabled={multiSelect.length === 0}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-rose-400 to-orange-400 text-white font-bold text-base shadow-lg shadow-rose-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-transform"
+              className="w-full py-4 rounded-2xl bg-orange-400 text-white font-bold text-base shadow-lg shadow-orange-100 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-transform"
             >
-              선택 완료 ✓
+              선택 완료
             </button>
           </div>
         </div>

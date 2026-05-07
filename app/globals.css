@@ -1,10 +1,6 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-coral: #FF6B6B;
-  --color-coral-light: #FFE8E8;
-  --color-peach: #FFB347;
-  --color-peach-light: #FFF3E0;
   --font-sans: var(--font-noto-kr);
 }
 
@@ -14,14 +10,14 @@
 
 body {
   font-family: var(--font-noto-kr), 'Noto Sans KR', sans-serif;
-  background: linear-gradient(135deg, #FFE4D6 0%, #FFD6E8 60%, #E8D6FF 100%);
+  background: #F2F2F7;
   min-height: 100vh;
 }
 
 @keyframes fadeSlideIn {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -30,8 +26,8 @@ body {
 }
 
 @keyframes popIn {
-  0% { transform: scale(0.95); opacity: 0; }
-  60% { transform: scale(1.02); }
+  0% { transform: scale(0.96); opacity: 0; }
+  60% { transform: scale(1.01); }
   100% { transform: scale(1); opacity: 1; }
 }
 
@@ -40,5 +36,5 @@ body {
 }
 
 .animate-pop {
-  animation: popIn 0.3s ease-out forwards;
+  animation: popIn 0.32s ease-out forwards;
 }
