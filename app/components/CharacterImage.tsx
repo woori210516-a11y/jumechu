@@ -6,12 +6,14 @@ import { useState } from 'react';
 interface CharacterImageProps {
   size?: number;
   className?: string;
+  src?: string; // 없으면 기본 character.png
 }
 
-export default function CharacterImage({ size = 120, className = '' }: CharacterImageProps) {
+export default function CharacterImage({ size = 120, className = '', src }: CharacterImageProps) {
   const [error, setError] = useState(false);
+  const imageSrc = (!error && src) ? src : (!error ? '/character.png' : null);
 
-  if (error) {
+  if (error || !imageSrc) {
     return (
       <div
         className={`flex items-center justify-center rounded-full bg-gradient-to-br from-orange-200 to-rose-200 ${className}`}
@@ -24,8 +26,8 @@ export default function CharacterImage({ size = 120, className = '' }: Character
 
   return (
     <Image
-      src="/character.png"
-      alt="남친 캐릭터"
+      src={imageSrc}
+      alt="캐릭터"
       width={size}
       height={size}
       className={`rounded-full object-cover ${className}`}

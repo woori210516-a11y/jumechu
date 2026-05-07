@@ -1,8 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import CharacterImage from '@/app/components/CharacterImage';
-import type { Menu, ScoredMenu } from '@/app/types';
+import type { Concept, Menu, ScoredMenu } from '@/app/types';
+
+const RESULT_HEADER: Record<Concept, string> = {
+  boyfriend: '빨리 골라줘서 고마워 자기야ㅎ',
+  mom: '건강한걸로 잘 챙겨먹어!',
+  together: '싫으면 각자 집에 배달시켜놓고 영통이나 해',
+};
+
+const RESULT_IMAGE: Record<Concept, string> = {
+  boyfriend: '/boyfriend-result.png',
+  mom:       '/mom-result.png',
+  together:  '/group-quiz.png',
+};
 
 function getKeyword(menu: Menu): string {
   return menu.subItems ? menu.category : menu.name;
@@ -67,9 +80,10 @@ interface ResultViewProps {
   shareUrl?: string;
   onRestart: () => void;
   isDead?: boolean;
+  concept?: Concept;
 }
 
-export default function ResultView({ results, showFunnyMessage, shareUrl, onRestart, isDead }: ResultViewProps) {
+export default function ResultView({ results, showFunnyMessage, shareUrl, onRestart, isDead, concept = 'boyfriend' }: ResultViewProps) {
   const [copied, setCopied] = useState(false);
 
   async function handleShare() {
@@ -84,7 +98,7 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
     return (
       <div className="flex flex-col flex-1 px-5 pt-8 pb-6 gap-5 animate-fade-slide">
         <div className="flex flex-col items-center gap-3">
-          <CharacterImage size={72} />
+          <Image src="/dead.png" alt="이미사망" width={200} height={200} className="object-contain" priority />
           <div className="text-center">
             <p className="text-lg font-bold text-gray-800">과로로 사망하셨습니다</p>
             <p className="mt-1 text-gray-400 text-sm">다음 생에는 건물주로 태어나시길</p>
@@ -114,7 +128,7 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
     return (
       <div className="flex flex-col flex-1 items-center justify-center px-6 gap-8 animate-fade-slide">
         <div className="flex flex-col items-center gap-5">
-          <CharacterImage size={88} />
+          <Image src={RESULT_IMAGE[concept]} alt="결과" width={200} height={200} className="object-contain" priority />
           <div className="text-center">
             <p className="text-xl font-bold text-gray-800">조건에 맞는 메뉴가 없어</p>
             <p className="mt-2 text-gray-400 text-sm leading-relaxed">
@@ -137,7 +151,7 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
     return (
       <div className="flex flex-col flex-1 items-center justify-center px-6 gap-8 animate-fade-slide">
         <div className="flex flex-col items-center gap-5">
-          <CharacterImage size={88} />
+          <Image src="/hungry.png" alt="햇반" width={200} height={200} className="object-contain" priority />
           <div className="text-center">
             <p className="text-xl font-bold text-gray-800">오늘은 그냥 햇반이나 드세요</p>
             <p className="mt-2 text-gray-400 text-sm">아님 걍 굶던가..</p>
@@ -158,11 +172,11 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
   return (
     <div className="flex flex-col flex-1 px-5 pt-7 pb-6 gap-5 animate-fade-slide">
       {/* 헤더 */}
-      <div className="flex items-center gap-3">
-        <CharacterImage size={40} className="shrink-0" />
-        <div>
+      <div className="flex flex-col items-center gap-2">
+        <Image src={RESULT_IMAGE[concept]} alt="결과" width={200} height={200} className="object-contain" priority />
+        <div className="text-center">
           <p className="text-xs text-gray-400 font-medium">오늘의 메뉴 추천</p>
-          <p className="text-base font-bold text-gray-800 leading-tight">딱 맞는 메뉴 찾았어!</p>
+          <p className="text-base font-bold text-gray-800 leading-tight">{RESULT_HEADER[concept]}</p>
         </div>
       </div>
 

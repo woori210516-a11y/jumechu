@@ -1,7 +1,15 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'NeoDGM';
+  src: url('/fonts/neodgm.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme inline {
-  --font-sans: var(--font-noto-kr);
+  --font-sans: 'NeoDGM', sans-serif;
 }
 
 * {
@@ -9,7 +17,7 @@
 }
 
 body {
-  font-family: var(--font-noto-kr), 'Noto Sans KR', sans-serif;
+  font-family: 'NeoDGM', sans-serif;
   background: #F2F2F7;
   min-height: 100vh;
 }
