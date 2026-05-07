@@ -31,13 +31,13 @@ const CONCEPT_CONFIG: Record<Concept, { label: string; title: string; sub: strin
   boyfriend: {
     label: '남친',
     title: '울자기 머먹을까?',
-    sub: '이것도 싫고ㅎ저것도 싫다고 해서~ 준비해봤어 ㅎ제발 골라주라ㅎ',
+    sub: '이것도 싫고ㅎ저것도 싫다고 해서~ 준비해봣어ㅎ',
     button: '아무거나 먹자며..',
   },
   mom: {
     label: '엄마',
     title: '아휴 엄마가 밥먹으랬지!!!',
-    sub: '너 너 맨날 라면이나 처먹으니까 살이찌지 저거저거 어휴',
+    sub: '너너 맨날 라면이나 처먹으니까 살이찌지 저거저거 어휴 내가 못살아',
     button: '아 알겟다고 ㅠ',
   },
   together: {

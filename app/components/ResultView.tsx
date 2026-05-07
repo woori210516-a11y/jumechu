@@ -42,34 +42,38 @@ interface MapButtonsProps {
 
 function MapButtons({ menu, variant }: MapButtonsProps) {
   const isDark = variant === 'dark';
+  const dividerCls = isDark ? 'border-white/20' : 'border-gray-100';
+  const labelCls = isDark ? 'text-white/60' : 'text-gray-400';
   const naverCls = isDark
     ? 'border border-lime-200 text-lime-100'
     : 'border border-gray-200 text-gray-500';
   const kakaoCls = isDark
     ? 'border border-yellow-200 text-yellow-100'
     : 'border border-yellow-300 text-yellow-600';
-  const dividerCls = isDark ? 'border-white/20' : 'border-gray-100';
 
   return (
-    <div className={`mt-3 pt-3 border-t ${dividerCls} flex gap-2`}>
-      <a
-        href={getNaverMapUrl(menu)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`flex-1 inline-flex items-center justify-center gap-1.5 ${naverCls} text-xs font-semibold px-3 py-2 rounded-xl active:scale-95 transition-all`}
-      >
-        <img src="https://www.naver.com/favicon.ico" alt="" className="w-3.5 h-3.5 rounded-sm" />
-        네이버지도
-      </a>
-      <a
-        href={getKakaoMapUrl(menu)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`flex-1 inline-flex items-center justify-center gap-1.5 ${kakaoCls} text-xs font-semibold px-3 py-2 rounded-xl active:scale-95 transition-all`}
-      >
-        <img src="https://map.kakao.com/favicon.ico" alt="" className="w-3.5 h-3.5 rounded-sm" />
-        카카오맵
-      </a>
+    <div className={`mt-3 pt-3 border-t ${dividerCls} flex items-center justify-between gap-2`}>
+      <span className={`text-xs font-semibold ${labelCls} shrink-0`}>근처 맛집</span>
+      <div className="flex gap-1.5">
+        <a
+          href={getNaverMapUrl(menu)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`inline-flex items-center gap-1 ${naverCls} text-xs font-semibold px-2.5 py-1.5 rounded-xl active:scale-95 transition-all`}
+        >
+          <img src="https://www.naver.com/favicon.ico" alt="" className="w-3 h-3 rounded-sm" />
+          네이버지도
+        </a>
+        <a
+          href={getKakaoMapUrl(menu)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`inline-flex items-center gap-1 ${kakaoCls} text-xs font-semibold px-2.5 py-1.5 rounded-xl active:scale-95 transition-all`}
+        >
+          <img src="https://map.kakao.com/favicon.ico" alt="" className="w-3 h-3 rounded-sm" />
+          카카오맵
+        </a>
+      </div>
     </div>
   );
 }
