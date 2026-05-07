@@ -1,28 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import CharacterImage from '@/app/components/CharacterImage';
 import ResultView from '@/app/components/ResultView';
+import { GroupPeopleView, GroupInviteView, GroupWaitingView } from '@/app/components/GroupFlow';
 import { questions, getActiveQuestions } from '@/app/lib/questions';
 import { calculateResults } from '@/app/lib/scoring';
 import { resultsToShareParam } from '@/app/lib/share';
+import { createRoom, joinRoom, fetchRoom, submitResult } from '@/app/lib/group';
 import type { Answers, Concept, ScoredMenu } from '@/app/types';
 import menusData from '@/data/menus.json';
 
-type View = 'intro' | 'quiz' | 'result';
+type View = 'intro' | 'quiz' | 'result' | 'group-people' | 'group-invite' | 'group-waiting';
 
 interface HistoryEntry {
   qIdx: number;
   answers: Answers;
 }
 
-const CONCEPT_CONFIG: Record<Concept, {
-  label: string;
-  title: string;
-  sub: string;
-  button: string;
-}> = {
+interface GroupState {
+  roomId: string;
+  nickname: string;
+  participantId: string;
+  maxMembers: number;
+}
+
+const CONCEPT_CONFIG: Record<Concept, { label: string; title: string; sub: string; button: string }> = {
   boyfriend: {
     label: '남친',
     title: '울자기 머먹을까?',
@@ -43,7 +48,20 @@ const CONCEPT_CONFIG: Record<Concept, {
   },
 };
 
-export default function Home() {
+const CONCEPT_IMAGE: Record<Concept, { main: string; quiz: string }> = {
+  boyfriend: { main: '/boyfriend-main.png', quiz: '/boyfriend-quiz.png' },
+  mom:       { main: '/mom-main.png',       quiz: '/mom-quiz.png' },
+  together:  { main: '/group-main.png',     quiz: '/group-quiz.png' },
+};
+
+const CONCEPT_ORDER: Concept[] = ['boyfriend', 'mom', 'together'];
+
+// ── 메인 컴포넌트 ──────────────────────────────────────────────────────────────────
+
+function HomeContent() {
+  const searchParams = useSearchParams();
+  const hasJoinedRef = useRef(false);
+
   const [view, setView] = useState<View>('intro');
   const [concept, setConcept] = useState<Concept>('boyfriend');
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -52,6 +70,32 @@ export default function Home() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [results, setResults] = useState<ScoredMenu[]>([]);
   const [isDead, setIsDead] = useState(false);
+  const [groupState, setGroupState] = useState<GroupState | null>(null);
+
+  // 공유 링크 접속 처리
+  useEffect(() => {
+    if (hasJoinedRef.current) return;
+    const roomId = searchParams.get('room');
+    if (!roomId) return;
+    hasJoinedRef.current = true;
+
+    // URL 즉시 정리
+    window.history.replaceState({}, '', '/');
+
+    async function doJoin() {
+      try {
+        const room = await fetchRoom(roomId!);
+        if (!room || room.status === 'done') return;
+        const { nickname, participantId } = await joinRoom(roomId!);
+        setGroupState({ roomId: roomId!, nickname, participantId, maxMembers: room.max_members });
+        setConcept('together');
+        setView('group-invite');
+      } catch (e) {
+        console.error('join error:', e);
+      }
+    }
+    doJoin();
+  }, [searchParams]);
 
   const activeQuestions = getActiveQuestions(answers.drink, answers.foodType);
   const currentQuestion = activeQuestions[questionIndex];
@@ -62,7 +106,34 @@ export default function Home() {
     setAnswers({});
     setMultiSelect([]);
     setHistory([]);
+    if (concept === 'together') {
+      setView('group-people');
+    } else {
+      setView('quiz');
+    }
+  }
+
+  async function handleGroupPeopleNext(maxMembers: number) {
+    const roomId = await createRoom(maxMembers);
+    const { nickname, participantId } = await joinRoom(roomId);
+    setGroupState({ roomId, nickname, participantId, maxMembers });
+    setView('group-invite');
+  }
+
+  function handleGroupStart() {
+    setQuestionIndex(0);
+    setAnswers({});
+    setMultiSelect([]);
+    setHistory([]);
     setView('quiz');
+  }
+
+  function handleGroupFinalResult(menuName: string) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const menu = (menusData.menus as any[]).find((m) => m.name === menuName);
+    // score를 높게 고정해서 저점수(햇반) 화면이 뜨지 않도록 함
+    setResults(menu ? [{ menu, score: 99 }] : []);
+    setView('result');
   }
 
   function advance(newAnswers: Answers) {
@@ -107,8 +178,7 @@ export default function Home() {
 
   function handleBack() {
     if (history.length === 0) {
-      // 첫 질문에서 뒤로 → 컨셉 선택 화면으로
-      setView('intro');
+      setView(groupState ? 'group-invite' : 'intro');
       return;
     }
     const prev = history[history.length - 1];
@@ -125,9 +195,7 @@ export default function Home() {
     } else {
       setMultiSelect((prev) => {
         const withoutExclusive = prev.filter((x) => !exclusives.includes(x));
-        if (withoutExclusive.includes(option)) {
-          return withoutExclusive.filter((x) => x !== option);
-        }
+        if (withoutExclusive.includes(option)) return withoutExclusive.filter((x) => x !== option);
         return [...withoutExclusive, option];
       });
     }
@@ -137,7 +205,13 @@ export default function Home() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const scored = calculateResults(finalAnswers, menusData.menus as any);
     setResults(scored);
-    setView('result');
+
+    if (groupState && scored.length > 0) {
+      submitResult(groupState.participantId, scored[0].menu.name).catch(console.error);
+      setView('group-waiting');
+    } else {
+      setView('result');
+    }
   }
 
   function restart() {
@@ -148,25 +222,51 @@ export default function Home() {
     setHistory([]);
     setResults([]);
     setIsDead(false);
+    setGroupState(null);
+  }
+
+  // 그룹 모드 전용: 사망 시 설문 처음으로 (groupState 유지)
+  function restartQuizOnly() {
+    setQuestionIndex(0);
+    setAnswers({});
+    setMultiSelect([]);
+    setHistory([]);
+    setResults([]);
+    setIsDead(false);
+    setView('quiz');
   }
 
   const showFunnyMessage = answers.diet === '빡세게 중' && answers.drink === '마심';
 
   const shareUrl =
-    view === 'result' && results.length > 0
+    view === 'result' && results.length > 0 && !groupState
       ? `${window.location.origin}/result?q=${resultsToShareParam(results)}`
       : undefined;
 
   return (
     <main className="min-h-screen flex justify-center items-start">
       <div className="w-full max-w-[390px] min-h-screen bg-white flex flex-col shadow-2xl shadow-rose-200/50">
+
         {view === 'intro' && (
-          <IntroView
-            concept={concept}
-            onConceptChange={setConcept}
-            onStart={startQuiz}
+          <IntroView concept={concept} onConceptChange={setConcept} onStart={startQuiz} />
+        )}
+
+        {view === 'group-people' && (
+          <GroupPeopleView
+            onNext={handleGroupPeopleNext}
+            onBack={() => setView('intro')}
           />
         )}
+
+        {view === 'group-invite' && groupState && (
+          <GroupInviteView
+            roomId={groupState.roomId}
+            nickname={groupState.nickname}
+            onStart={handleGroupStart}
+            onBack={() => setView('intro')}
+          />
+        )}
+
         {view === 'quiz' && currentQuestion && (
           <QuizView
             question={currentQuestion}
@@ -180,30 +280,42 @@ export default function Home() {
             onBack={handleBack}
           />
         )}
+
+        {view === 'group-waiting' && groupState && (
+          <GroupWaitingView
+            roomId={groupState.roomId}
+            nickname={groupState.nickname}
+            maxMembers={groupState.maxMembers}
+            onFinalResult={handleGroupFinalResult}
+          />
+        )}
+
         {view === 'result' && (
           <ResultView
             results={results}
             showFunnyMessage={showFunnyMessage}
             shareUrl={isDead ? undefined : shareUrl}
             onRestart={restart}
+            onRestartQuiz={groupState ? restartQuizOnly : undefined}
             isDead={isDead}
             concept={concept}
           />
         )}
+
       </div>
     </main>
   );
 }
 
-// ── Intro ─────────────────────────────────────────────────────────────────────
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white" />}>
+      <HomeContent />
+    </Suspense>
+  );
+}
 
-const CONCEPT_IMAGE: Record<Concept, { main: string; quiz: string }> = {
-  boyfriend: { main: '/boyfriend-main.png', quiz: '/boyfriend-quiz.png' },
-  mom:       { main: '/mom-main.png',       quiz: '/mom-quiz.png' },
-  together:  { main: '/group-main.png',     quiz: '/group-quiz.png' },
-};
-
-const CONCEPT_ORDER: Concept[] = ['boyfriend', 'mom', 'together'];
+// ── 인트로 화면 ────────────────────────────────────────────────────────────────────
 
 interface IntroViewProps {
   concept: Concept;
@@ -224,9 +336,7 @@ function IntroView({ concept, onConceptChange, onStart }: IntroViewProps) {
               key={c}
               onClick={() => onConceptChange(c)}
               className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
-                concept === c
-                  ? 'bg-white text-gray-800 shadow-sm'
-                  : 'text-gray-400'
+                concept === c ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'
               }`}
             >
               {CONCEPT_CONFIG[c].label}
@@ -240,7 +350,7 @@ function IntroView({ concept, onConceptChange, onStart }: IntroViewProps) {
         <div className="flex flex-col items-center gap-6">
           <div className="flex items-center justify-center">
             <Image
-              src={CONCEPT_IMAGE[concept].main ?? '/character.png'}
+              src={CONCEPT_IMAGE[concept].main}
               alt="캐릭터"
               width={200}
               height={200}
@@ -249,12 +359,8 @@ function IntroView({ concept, onConceptChange, onStart }: IntroViewProps) {
             />
           </div>
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 leading-tight">
-              {cfg.title}
-            </h1>
-            <p className="mt-3 text-gray-400 text-sm leading-relaxed">
-              {cfg.sub}
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900 leading-tight">{cfg.title}</h1>
+            <p className="mt-3 text-gray-400 text-sm leading-relaxed">{cfg.sub}</p>
           </div>
         </div>
 
@@ -272,7 +378,7 @@ function IntroView({ concept, onConceptChange, onStart }: IntroViewProps) {
   );
 }
 
-// ── Quiz ──────────────────────────────────────────────────────────────────────
+// ── 설문 화면 ──────────────────────────────────────────────────────────────────────
 
 interface QuizViewProps {
   question: (typeof questions)[0];
@@ -301,14 +407,13 @@ function QuizView({
 
   return (
     <div className="flex flex-col flex-1 px-5 pt-5 pb-6 gap-5 animate-fade-slide">
-      {/* 상단 헤더 */}
       <div className="flex items-center justify-between">
         <button
           onClick={onBack}
           className="flex items-center gap-1.5 text-sm text-gray-400 font-medium active:scale-95 transition-all"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6"/>
+            <path d="M15 18l-6-6 6-6" />
           </svg>
           이전
         </button>
@@ -318,7 +423,6 @@ function QuizView({
         <div className="w-10" />
       </div>
 
-      {/* 프로그레스 바 */}
       <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
         <div
           className="h-full bg-orange-400 rounded-full transition-all duration-500 ease-out"
@@ -326,20 +430,16 @@ function QuizView({
         />
       </div>
 
-      {/* 캐릭터 + 질문 말풍선 */}
       <div className="flex items-start gap-3 pt-1">
         <CharacterImage size={40} src={quizImageSrc} className="shrink-0 mt-1" />
         <div className="flex-1 bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm border border-gray-100">
-          <p className="text-base font-bold text-gray-800 leading-snug">
-            {question.text}
-          </p>
+          <p className="text-base font-bold text-gray-800 leading-snug">{question.text}</p>
           {question.subText && (
             <p className="mt-1 text-xs text-gray-400">{question.subText}</p>
           )}
         </div>
       </div>
 
-      {/* 선택지 */}
       {question.type === 'single' ? (
         <div className="flex flex-col gap-2.5 flex-1">
           {question.options.map((option) => (

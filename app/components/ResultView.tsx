@@ -79,11 +79,12 @@ interface ResultViewProps {
   showFunnyMessage: boolean;
   shareUrl?: string;
   onRestart: () => void;
+  onRestartQuiz?: () => void; // 그룹 모드: 사망 시 설문 첫 화면으로
   isDead?: boolean;
   concept?: Concept;
 }
 
-export default function ResultView({ results, showFunnyMessage, shareUrl, onRestart, isDead, concept = 'boyfriend' }: ResultViewProps) {
+export default function ResultView({ results, showFunnyMessage, shareUrl, onRestart, onRestartQuiz, isDead, concept = 'boyfriend' }: ResultViewProps) {
   const [copied, setCopied] = useState(false);
 
   async function handleShare() {
@@ -113,7 +114,7 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
         </div>
         <div className="mt-auto pt-2">
           <button
-            onClick={onRestart}
+            onClick={onRestartQuiz ?? onRestart}
             className="w-full py-4 rounded-2xl border border-gray-200 text-gray-500 font-semibold text-base active:scale-95 hover:bg-gray-50 transition-all"
           >
             다시 고르기
