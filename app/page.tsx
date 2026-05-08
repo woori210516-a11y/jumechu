@@ -306,8 +306,10 @@ function HomeContent() {
   const showFunnyMessage = answers.diet === '빡세게 중' && answers.drink === '마심';
 
   const shareUrl =
-    view === 'result' && results.length > 0 && !groupState
-      ? `${window.location.origin}/result?q=${resultsToShareParam(results)}`
+    view === 'result' && results.length > 0
+      ? groupState
+        ? `${window.location.origin}/room/${groupState.roomId}`
+        : `${window.location.origin}/result?q=${resultsToShareParam(results)}`
       : undefined;
 
   return (

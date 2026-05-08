@@ -11,5 +11,5 @@ export function parseShareParam(q: string, menus: Menu[]): ScoredMenu[] {
     .split('-')
     .map((idStr) => menus.find((m) => m.id === Number(idStr)))
     .filter((m): m is Menu => m !== undefined)
-    .map((menu) => ({ menu, score: 0 }));
+    .map((menu) => ({ menu, score: 99 }));
 }
