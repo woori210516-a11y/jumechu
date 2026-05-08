@@ -248,13 +248,20 @@ function HomeContent() {
     }
   }
 
+  // 그룹 모드: 1위 메뉴를 서버에 제출하고 대기 화면으로 이동
+  function submitToGroupAndWait(topMenuName: string) {
+    if (!groupState) return;
+    submitResult(groupState.participantId, topMenuName).catch(console.error);
+    setView('group-waiting');
+  }
+
   function finishQuiz(finalAnswers: Answers) {
     const scored = calculateResults(finalAnswers, menus);
     setResults(scored);
 
+    // 그룹 모드 + 결과 있음 → 제출 후 대기. 그 외(솔로 또는 결과없음) → 결과화면.
     if (groupState && scored.length > 0) {
-      submitResult(groupState.participantId, scored[0].menu.name).catch(console.error);
-      setView('group-waiting');
+      submitToGroupAndWait(scored[0].menu.name);
     } else {
       setView('result');
     }
