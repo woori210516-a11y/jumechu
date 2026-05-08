@@ -223,9 +223,14 @@ function HomeContent() {
     advance(newAnswers);
   }
 
+  // 설문 첫 질문에서 뒤로: 그룹이면 초대화면, 솔로면 인트로
+  function getQuizEntryView(): View {
+    return groupState ? 'group-invite' : 'intro';
+  }
+
   function handleBack() {
     if (history.length === 0) {
-      setView(groupState ? 'group-invite' : 'intro');
+      setView(getQuizEntryView());
       return;
     }
     const prev = history[history.length - 1];
@@ -285,12 +290,14 @@ function HomeContent() {
 
   const showFunnyMessage = answers.diet === '빡세게 중' && answers.drink === '마심';
 
-  const shareUrl =
-    view === 'result' && results.length > 0
-      ? groupState
-        ? `${window.location.origin}/room/${groupState.roomId}`
-        : `${window.location.origin}/result?q=${resultsToShareParam(results)}`
-      : undefined;
+  // 솔로: 결과 파라미터 링크 / 그룹: 방 링크 (done 상태로 접속 시 결과 바로 표시)
+  function getShareUrl(): string | undefined {
+    if (view !== 'result' || results.length === 0) return undefined;
+    return groupState
+      ? `${window.location.origin}/room/${groupState.roomId}`
+      : `${window.location.origin}/result?q=${resultsToShareParam(results)}`;
+  }
+  const shareUrl = getShareUrl();
 
   return (
     <main className="min-h-screen flex justify-center items-start">
