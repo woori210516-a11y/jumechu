@@ -31,6 +31,7 @@ const foodTypeMap: Record<string, string> = {
   '빵': '빵',
   '고기': '고기',
   '생선': '생선',
+  '채소 위주': '채소',
 };
 
 const spicyMap: Record<string, string> = {

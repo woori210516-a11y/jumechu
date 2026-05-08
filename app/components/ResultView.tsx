@@ -133,19 +133,20 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
     return (
       <div className="flex flex-col flex-1 items-center justify-center px-6 gap-8 animate-fade-slide">
         <div className="flex flex-col items-center gap-5">
-          <Image src={RESULT_IMAGE[concept]} alt="결과" width={200} height={200} className="object-contain" priority />
+          <Image src="/none.png" alt="결과없음" width={200} height={200} className="object-contain" priority />
           <div className="text-center">
-            <p className="text-xl font-bold text-gray-800">조건에 맞는 메뉴가 없어</p>
+            <p className="text-xl font-bold text-gray-800">이것도 싫고 저것도 싫으면</p>
+            <p className="text-xl font-bold text-gray-800">뭘 드시겠다는..?</p>
             <p className="mt-2 text-gray-400 text-sm leading-relaxed">
-              조건을 조금 바꿔서 다시 해볼까?
+              조건을 조금 바꿔서 다시 시도해봐
             </p>
           </div>
         </div>
         <button
-          onClick={onRestart}
+          onClick={onRestartQuiz ?? onRestart}
           className="w-full py-4 rounded-2xl bg-orange-400 text-white font-bold text-base shadow-lg shadow-orange-100 active:scale-95 transition-transform"
         >
-          다시 고르기
+          다시 제대로 고르기
         </button>
       </div>
     );
