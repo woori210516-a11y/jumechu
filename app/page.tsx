@@ -11,7 +11,7 @@ import { calculateResults } from '@/app/lib/scoring';
 import { resultsToShareParam } from '@/app/lib/share';
 import { createRoom, joinRoom, fetchRoom, fetchRoomState, submitResult } from '@/app/lib/group';
 import type { Answers, Concept, ScoredMenu } from '@/app/types';
-import menusData from '@/data/menus.json';
+import { menus } from '@/app/lib/menus';
 
 type View = 'intro' | 'quiz' | 'result' | 'group-people' | 'group-invite' | 'group-waiting' | 'room-error';
 
@@ -109,8 +109,7 @@ function HomeContent() {
         // 3. 이미 완료된 방 → 최종 결과 바로 표시
         if (room.status === 'done' && room.final_result) {
           setConcept('together');
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const menu = (menusData.menus as any[]).find((m) => m.name === room.final_result);
+          const menu = menus.find((m) => m.name === room.final_result);
           setResults(menu ? [{ menu, score: 99 }] : []);
           setView('result');
           return;
@@ -196,20 +195,14 @@ function HomeContent() {
   }
 
   function handleGroupFinalResult(menuName: string) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const menu = (menusData.menus as any[]).find((m) => m.name === menuName);
+    const menu = menus.find((m) => m.name === menuName);
     // score를 높게 고정해서 저점수(햇반) 화면이 뜨지 않도록 함
     setResults(menu ? [{ menu, score: 99 }] : []);
     setView('result');
   }
 
   function advance(newAnswers: Answers) {
-    const newActiveQuestions = questions.filter((q) => {
-      if (!q.conditional) return true;
-      if (q.id === 'drinkType') return newAnswers.drink === '마심';
-      if (q.id === 'meatType') return newAnswers.foodType?.includes('고기') ?? false;
-      return false;
-    });
+    const newActiveQuestions = getActiveQuestions(newAnswers.drink, newAnswers.foodType);
     const nextIndex = questionIndex + 1;
     if (nextIndex < newActiveQuestions.length) {
       setQuestionIndex(nextIndex);
@@ -269,8 +262,7 @@ function HomeContent() {
   }
 
   function finishQuiz(finalAnswers: Answers) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const scored = calculateResults(finalAnswers, menusData.menus as any);
+    const scored = calculateResults(finalAnswers, menus);
     setResults(scored);
 
     if (groupState && scored.length > 0) {

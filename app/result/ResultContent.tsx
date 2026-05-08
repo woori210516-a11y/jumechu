@@ -4,7 +4,7 @@ import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import ResultView from '@/app/components/ResultView';
 import { parseShareParam } from '@/app/lib/share';
-import menusData from '@/data/menus.json';
+import { menus } from '@/app/lib/menus';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -13,8 +13,7 @@ export default function ResultContent({ searchParams }: { searchParams: SearchPa
   const router = useRouter();
 
   const q = typeof params.q === 'string' ? params.q : '';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const results = parseShareParam(q, menusData.menus as any);
+  const results = parseShareParam(q, menus);
 
   return (
     <main className="min-h-screen flex justify-center items-start">
