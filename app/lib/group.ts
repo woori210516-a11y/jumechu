@@ -18,10 +18,9 @@ export interface ParticipantData {
 }
 
 export async function createRoom(maxMembers: number): Promise<string> {
-  const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
   const { data, error } = await supabase
     .from('rooms')
-    .insert({ max_members: maxMembers, expires_at: expiresAt })
+    .insert({ max_members: maxMembers })
     .select('id')
     .single();
   if (error) throw error;
