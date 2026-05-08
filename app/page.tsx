@@ -82,8 +82,11 @@ function HomeContent() {
     if (!roomId) return;
     hasJoinedRef.current = true;
 
-    // URL 즉시 정리
-    window.history.replaceState({}, '', '/');
+    // URL 정리 헬퍼 (done 방은 /room/<id> 유지, 그 외는 /)
+    function cleanUrl(keepRoomUrl = false) {
+      const target = keepRoomUrl ? `/room/${roomId}` : '/';
+      window.history.replaceState({}, '', target);
+    }
 
     function showRoomError(title: string, sub: string) {
       setRoomErrorInfo({ title, sub });
@@ -105,8 +108,9 @@ function HomeContent() {
           return;
         }
 
-        // 3. 이미 완료된 방 → 최종 결과 바로 표시
+        // 3. 이미 완료된 방 → /room/<id> URL 유지 + 결과 바로 표시 (새로고침 가능)
         if (room.status === 'done' && room.final_result) {
+          cleanUrl(true);
           setConcept('together');
           const menu = menus.find((m) => m.name === room.final_result);
           setResults(menu ? [{ menu, score: 99 }] : []);
@@ -114,6 +118,7 @@ function HomeContent() {
           return;
         }
 
+        cleanUrl(false);
         setConcept('together');
 
         // 참여자 목록 한 번만 조회 (4·5번 분기에 공통 사용)
@@ -290,12 +295,12 @@ function HomeContent() {
 
   const showFunnyMessage = answers.diet === '빡세게 중' && answers.drink === '마심';
 
-  // 솔로: 결과 파라미터 링크 / 그룹: 방 링크 (done 상태로 접속 시 결과 바로 표시)
+  // 솔로: 결과+컨셉 파라미터 링크 / 그룹: 방 링크 (done 상태 접속 시 결과 바로 표시)
   function getShareUrl(): string | undefined {
     if (view !== 'result' || results.length === 0) return undefined;
     return groupState
       ? `${window.location.origin}/room/${groupState.roomId}`
-      : `${window.location.origin}/result?q=${resultsToShareParam(results)}`;
+      : `${window.location.origin}/result?q=${resultsToShareParam(results)}&concept=${concept}`;
   }
   const shareUrl = getShareUrl();
 
