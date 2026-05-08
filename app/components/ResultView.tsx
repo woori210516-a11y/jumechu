@@ -137,9 +137,6 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
           <div className="text-center">
             <p className="text-xl font-bold text-gray-800">이것도 싫고 저것도 싫으면</p>
             <p className="text-xl font-bold text-gray-800">뭘 드시겠다는..?</p>
-            <p className="mt-2 text-gray-400 text-sm leading-relaxed">
-              조건을 조금 바꿔서 다시 시도해봐
-            </p>
           </div>
         </div>
         <button
