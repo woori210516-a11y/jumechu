@@ -12,13 +12,9 @@ import { resultsToShareParam } from '@/app/lib/share';
 import { createRoom, joinRoom, fetchRoom, fetchRoomState, submitResult } from '@/app/lib/group';
 import type { Answers, Concept, ScoredMenu } from '@/app/types';
 import { menus } from '@/app/lib/menus';
+import { useQuizState } from '@/app/lib/useQuizState';
 
 type View = 'intro' | 'quiz' | 'result' | 'group-people' | 'group-invite' | 'group-waiting' | 'room-error';
-
-interface HistoryEntry {
-  qIdx: number;
-  answers: Answers;
-}
 
 interface GroupState {
   roomId: string;
@@ -64,10 +60,13 @@ function HomeContent() {
 
   const [view, setView] = useState<View>('intro');
   const [concept, setConcept] = useState<Concept>('boyfriend');
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Answers>({});
-  const [multiSelect, setMultiSelect] = useState<string[]>([]);
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const {
+    questionIndex, setQuestionIndex,
+    answers, setAnswers,
+    multiSelect, setMultiSelect,
+    history, setHistory,
+    reset: resetQuiz,
+  } = useQuizState();
   const [results, setResults] = useState<ScoredMenu[]>([]);
   const [isDead, setIsDead] = useState(false);
   const [groupState, setGroupState] = useState<GroupState | null>(null);
@@ -131,10 +130,7 @@ function HomeContent() {
             if (me.completed) {
               setView('group-waiting');
             } else {
-              setQuestionIndex(0);
-              setAnswers({});
-              setMultiSelect([]);
-              setHistory([]);
+              resetQuiz();
               setView('quiz');
             }
             return;
@@ -150,10 +146,7 @@ function HomeContent() {
         const { nickname, participantId } = await joinRoom(roomId!);
         setGroupState({ roomId: roomId!, nickname, participantId, maxMembers: room.max_members });
         // 링크로 참여한 신규 멤버는 바로 설문 시작
-        setQuestionIndex(0);
-        setAnswers({});
-        setMultiSelect([]);
-        setHistory([]);
+        resetQuiz();
         setView('quiz');
       } catch (e) {
         console.error('join error:', e);
@@ -168,10 +161,7 @@ function HomeContent() {
   const total = activeQuestions.length;
 
   function startQuiz() {
-    setQuestionIndex(0);
-    setAnswers({});
-    setMultiSelect([]);
-    setHistory([]);
+    resetQuiz();
     if (concept === 'together') {
       setView('group-people');
     } else {
@@ -187,10 +177,7 @@ function HomeContent() {
   }
 
   function handleGroupStart() {
-    setQuestionIndex(0);
-    setAnswers({});
-    setMultiSelect([]);
-    setHistory([]);
+    resetQuiz();
     setView('quiz');
   }
 
@@ -275,10 +262,7 @@ function HomeContent() {
 
   function restart() {
     setView('intro');
-    setQuestionIndex(0);
-    setAnswers({});
-    setMultiSelect([]);
-    setHistory([]);
+    resetQuiz();
     setResults([]);
     setIsDead(false);
     setGroupState(null);
@@ -286,10 +270,7 @@ function HomeContent() {
 
   // 그룹 모드 전용: 사망 시 설문 처음으로 (groupState 유지)
   function restartQuizOnly() {
-    setQuestionIndex(0);
-    setAnswers({});
-    setMultiSelect([]);
-    setHistory([]);
+    resetQuiz();
     setResults([]);
     setIsDead(false);
     setView('quiz');
