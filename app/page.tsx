@@ -71,6 +71,10 @@ function HomeContent() {
   const [results, setResults] = useState<ScoredMenu[]>([]);
   const [isDead, setIsDead] = useState(false);
   const [groupState, setGroupState] = useState<GroupState | null>(null);
+  const [roomErrorInfo, setRoomErrorInfo] = useState<{ title: string; sub: string }>({
+    title: '방을 찾을 수 없어요',
+    sub: '링크가 잘못됐거나 이미 삭제된 방이야',
+  });
 
   // 공유 링크 접속 처리
   useEffect(() => {
@@ -82,59 +86,79 @@ function HomeContent() {
     // URL 즉시 정리
     window.history.replaceState({}, '', '/');
 
+    function showRoomError(title: string, sub: string) {
+      setRoomErrorInfo({ title, sub });
+      setView('room-error');
+    }
+
     async function doJoin() {
       try {
         // 1. 방 존재 여부 확인
         const room = await fetchRoom(roomId!);
-        if (!room || room.status === 'done') {
-          setView('room-error');
+        if (!room) {
+          showRoomError('방을 찾을 수 없어요', '링크가 잘못됐거나 이미 삭제된 방이야');
+          return;
+        }
+
+        // 2. 만료 여부 확인
+        if (room.expires_at && new Date(room.expires_at) < new Date()) {
+          showRoomError('방이 만료됐어요 😢', '30분이 지나 방이 사라졌어요');
+          return;
+        }
+
+        // 3. 이미 완료된 방 → 최종 결과 바로 표시
+        if (room.status === 'done' && room.final_result) {
+          setConcept('together');
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const menu = (menusData.menus as any[]).find((m) => m.name === room.final_result);
+          setResults(menu ? [{ menu, score: 99 }] : []);
+          setView('result');
           return;
         }
 
         setConcept('together');
 
-        // 2. 로컬스토리지에서 기존 참여 이력 확인
+        // 참여자 목록 한 번만 조회 (4·5번 분기에 공통 사용)
+        const roomState = await fetchRoomState(roomId!);
+
+        // 4. 로컬스토리지에 이력 있음 → 재접속
         const storedNickname = localStorage.getItem(`group_nickname_${roomId}`);
         const storedParticipantId = localStorage.getItem(`group_participant_id_${roomId}`);
 
         if (storedNickname && storedParticipantId) {
-          // 재접속: DB에서 참여자 상태 확인
-          const roomState = await fetchRoomState(roomId!);
           const me = roomState.participants.find((p) => p.id === storedParticipantId);
-
           if (me) {
-            setGroupState({
-              roomId: roomId!,
-              nickname: me.nickname,
-              participantId: me.id,
-              maxMembers: room.max_members,
-            });
+            setGroupState({ roomId: roomId!, nickname: me.nickname, participantId: me.id, maxMembers: room.max_members });
             if (me.completed) {
-              // 이미 설문 완료 → 대기 화면으로
               setView('group-waiting');
             } else {
-              // 설문 미완료 → 설문 처음부터
               setQuestionIndex(0);
               setAnswers({});
               setMultiSelect([]);
               setHistory([]);
               setView('quiz');
             }
-          } else {
-            // 로컬에 이력은 있지만 DB에 없음 (삭제 등) → 신규 참여 처리
-            const { nickname, participantId } = await joinRoom(roomId!);
-            setGroupState({ roomId: roomId!, nickname, participantId, maxMembers: room.max_members });
-            setView('group-invite');
+            return;
           }
-        } else {
-          // 신규 참여자
-          const { nickname, participantId } = await joinRoom(roomId!);
-          setGroupState({ roomId: roomId!, nickname, participantId, maxMembers: room.max_members });
-          setView('group-invite');
+          // 로컬에는 있지만 DB에 없음 → 신규 참여로 fallthrough
         }
+
+        // 5. 신규 참여자
+        if (roomState.participants.length >= room.max_members) {
+          showRoomError('인원이 꽉 찼어요', `최대 ${room.max_members}명까지 참여할 수 있어`);
+          return;
+        }
+        const { nickname, participantId } = await joinRoom(roomId!);
+        setGroupState({ roomId: roomId!, nickname, participantId, maxMembers: room.max_members });
+        // 링크로 참여한 신규 멤버는 바로 설문 시작
+        setQuestionIndex(0);
+        setAnswers({});
+        setMultiSelect([]);
+        setHistory([]);
+        setView('quiz');
       } catch (e) {
         console.error('join error:', e);
-        setView('room-error');
+        showRoomError('오류가 발생했어요', '잠시 후 다시 시도해줘');
       }
     }
     doJoin();
@@ -334,7 +358,7 @@ function HomeContent() {
         )}
 
         {view === 'room-error' && (
-          <RoomErrorView onBack={restart} />
+          <RoomErrorView title={roomErrorInfo.title} sub={roomErrorInfo.sub} onBack={restart} />
         )}
 
         {view === 'result' && (
@@ -364,16 +388,14 @@ export default function Page() {
 
 // ── 방 오류 화면 ───────────────────────────────────────────────────────────────────
 
-function RoomErrorView({ onBack }: { onBack: () => void }) {
+function RoomErrorView({ title, sub, onBack }: { title: string; sub: string; onBack: () => void }) {
   return (
     <div className="flex flex-col flex-1 items-center justify-center px-6 gap-8 animate-fade-slide">
       <div className="flex flex-col items-center gap-5">
         <Image src="/hungry.png" alt="오류" width={200} height={200} className="object-contain" priority />
         <div className="text-center">
-          <p className="text-xl font-bold text-gray-800">방을 찾을 수 없어요</p>
-          <p className="mt-2 text-gray-400 text-sm leading-relaxed">
-            링크가 만료됐거나 잘못된 방이야
-          </p>
+          <p className="text-xl font-bold text-gray-800">{title}</p>
+          <p className="mt-2 text-gray-400 text-sm leading-relaxed">{sub}</p>
         </div>
       </div>
       <button

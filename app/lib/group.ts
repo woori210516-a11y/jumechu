@@ -7,6 +7,7 @@ export interface RoomData {
   status: string;
   final_result: string | null;
   max_members: number;
+  expires_at: string | null;
 }
 
 export interface ParticipantData {
@@ -17,9 +18,10 @@ export interface ParticipantData {
 }
 
 export async function createRoom(maxMembers: number): Promise<string> {
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
   const { data, error } = await supabase
     .from('rooms')
-    .insert({ max_members: maxMembers })
+    .insert({ max_members: maxMembers, expires_at: expiresAt })
     .select('id')
     .single();
   if (error) throw error;
@@ -29,7 +31,7 @@ export async function createRoom(maxMembers: number): Promise<string> {
 export async function fetchRoom(roomId: string): Promise<RoomData | null> {
   const { data, error } = await supabase
     .from('rooms')
-    .select('id, status, final_result, max_members')
+    .select('id, status, final_result, max_members, expires_at')
     .eq('id', roomId)
     .single();
   if (error) return null;
@@ -98,7 +100,7 @@ export async function fetchRoomState(
   const [roomRes, partRes] = await Promise.all([
     supabase
       .from('rooms')
-      .select('id, status, final_result, max_members')
+      .select('id, status, final_result, max_members, expires_at')
       .eq('id', roomId)
       .single(),
     supabase
