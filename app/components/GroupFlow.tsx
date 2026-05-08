@@ -122,7 +122,7 @@ interface GroupInviteViewProps {
 
 export function GroupInviteView({ roomId, nickname, onStart, onBack }: GroupInviteViewProps) {
   const [copied, setCopied] = useState(false);
-  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/?room=${roomId}` : '';
+  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/room/${roomId}` : '';
 
   async function handleCopy() {
     await navigator.clipboard.writeText(shareUrl);

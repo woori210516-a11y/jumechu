@@ -9,11 +9,11 @@ import { GroupPeopleView, GroupInviteView, GroupWaitingView } from '@/app/compon
 import { questions, getActiveQuestions } from '@/app/lib/questions';
 import { calculateResults } from '@/app/lib/scoring';
 import { resultsToShareParam } from '@/app/lib/share';
-import { createRoom, joinRoom, fetchRoom, submitResult } from '@/app/lib/group';
+import { createRoom, joinRoom, fetchRoom, fetchRoomState, submitResult } from '@/app/lib/group';
 import type { Answers, Concept, ScoredMenu } from '@/app/types';
 import menusData from '@/data/menus.json';
 
-type View = 'intro' | 'quiz' | 'result' | 'group-people' | 'group-invite' | 'group-waiting';
+type View = 'intro' | 'quiz' | 'result' | 'group-people' | 'group-invite' | 'group-waiting' | 'room-error';
 
 interface HistoryEntry {
   qIdx: number;
@@ -84,14 +84,57 @@ function HomeContent() {
 
     async function doJoin() {
       try {
+        // 1. 방 존재 여부 확인
         const room = await fetchRoom(roomId!);
-        if (!room || room.status === 'done') return;
-        const { nickname, participantId } = await joinRoom(roomId!);
-        setGroupState({ roomId: roomId!, nickname, participantId, maxMembers: room.max_members });
+        if (!room || room.status === 'done') {
+          setView('room-error');
+          return;
+        }
+
         setConcept('together');
-        setView('group-invite');
+
+        // 2. 로컬스토리지에서 기존 참여 이력 확인
+        const storedNickname = localStorage.getItem(`group_nickname_${roomId}`);
+        const storedParticipantId = localStorage.getItem(`group_participant_id_${roomId}`);
+
+        if (storedNickname && storedParticipantId) {
+          // 재접속: DB에서 참여자 상태 확인
+          const roomState = await fetchRoomState(roomId!);
+          const me = roomState.participants.find((p) => p.id === storedParticipantId);
+
+          if (me) {
+            setGroupState({
+              roomId: roomId!,
+              nickname: me.nickname,
+              participantId: me.id,
+              maxMembers: room.max_members,
+            });
+            if (me.completed) {
+              // 이미 설문 완료 → 대기 화면으로
+              setView('group-waiting');
+            } else {
+              // 설문 미완료 → 설문 처음부터
+              setQuestionIndex(0);
+              setAnswers({});
+              setMultiSelect([]);
+              setHistory([]);
+              setView('quiz');
+            }
+          } else {
+            // 로컬에 이력은 있지만 DB에 없음 (삭제 등) → 신규 참여 처리
+            const { nickname, participantId } = await joinRoom(roomId!);
+            setGroupState({ roomId: roomId!, nickname, participantId, maxMembers: room.max_members });
+            setView('group-invite');
+          }
+        } else {
+          // 신규 참여자
+          const { nickname, participantId } = await joinRoom(roomId!);
+          setGroupState({ roomId: roomId!, nickname, participantId, maxMembers: room.max_members });
+          setView('group-invite');
+        }
       } catch (e) {
         console.error('join error:', e);
+        setView('room-error');
       }
     }
     doJoin();
@@ -290,6 +333,10 @@ function HomeContent() {
           />
         )}
 
+        {view === 'room-error' && (
+          <RoomErrorView onBack={restart} />
+        )}
+
         {view === 'result' && (
           <ResultView
             results={results}
@@ -312,6 +359,30 @@ export default function Page() {
     <Suspense fallback={<div className="min-h-screen bg-white" />}>
       <HomeContent />
     </Suspense>
+  );
+}
+
+// ── 방 오류 화면 ───────────────────────────────────────────────────────────────────
+
+function RoomErrorView({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="flex flex-col flex-1 items-center justify-center px-6 gap-8 animate-fade-slide">
+      <div className="flex flex-col items-center gap-5">
+        <Image src="/hungry.png" alt="오류" width={200} height={200} className="object-contain" priority />
+        <div className="text-center">
+          <p className="text-xl font-bold text-gray-800">방을 찾을 수 없어요</p>
+          <p className="mt-2 text-gray-400 text-sm leading-relaxed">
+            링크가 만료됐거나 잘못된 방이야
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={onBack}
+        className="w-full py-4 rounded-2xl bg-orange-400 text-white font-bold text-base shadow-lg shadow-orange-100 active:scale-95 transition-transform"
+      >
+        처음으로
+      </button>
+    </div>
   );
 }
 
