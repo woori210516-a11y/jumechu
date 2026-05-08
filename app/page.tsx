@@ -190,6 +190,10 @@ function HomeContent() {
     const menu = menus.find((m) => m.name === menuName);
     // score를 높게 고정해서 저점수(햇반) 화면이 뜨지 않도록 함
     setResults(menu ? [{ menu, score: 99 }] : []);
+    // URL을 /room/<id>로 업데이트 → 새로고침해도 결과 유지
+    if (groupState) {
+      window.history.replaceState({}, '', `/room/${groupState.roomId}`);
+    }
     setView('result');
   }
 
