@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { RecommendResult } from '@/app/api/netflix/recommend/route';
 
-// ── 태그 타입 ─────────────────────────────────────────────────────────────────
+// ── 타입 ─────────────────────────────────────────────────────────────────────
 
 type TagKey =
   | 'lightness' | 'tension' | 'emotion' | 'horror' | 'laughter' | 'romance' | 'healing'
@@ -14,186 +14,395 @@ type TagKey =
 
 type Desired = Partial<Record<TagKey, number>>;
 
-// ── 설문 문항 정의 ─────────────────────────────────────────────────────────────
+type StepId = 'q1' | 'q1_1' | 'q1_2' | 'q2' | 'q3' | 'q4' | 'q5' | 'q6' | 'q7' | 'q8';
 
-interface QuizOption {
-  label: string;
-  emoji: string;
+type View = 'intro' | 'quiz' | 'loading' | 'result' | 'no-result';
+
+interface SurveyState {
+  contentTypes: string[];     // 'movie'|'drama'|'animation'|'documentary'|'variety'|'any'
+  isEnded: boolean | null;
+  episodeMin: number | null;
+  episodeMax: number | null;
+  runtimeMin: number | null;
+  runtimeMax: number | null;
+  countries: string[];        // 'KR'|'US'|'EU'|'JP'|'CN'|'ASIA'|'any'
   desired: Desired;
+  avoidViolence: boolean;
+  avoidAdult: boolean;
+  avoidHorror: boolean;
+  avoidSad: boolean;
 }
 
-interface QuizQuestion {
-  id: string;
-  text: string;
-  subText?: string;
-  options: QuizOption[];
+const INITIAL_SURVEY: SurveyState = {
+  contentTypes: [],
+  isEnded: null,
+  episodeMin: null,
+  episodeMax: null,
+  runtimeMin: null,
+  runtimeMax: null,
+  countries: [],
+  desired: {},
+  avoidViolence: false,
+  avoidAdult: false,
+  avoidHorror: false,
+  avoidSad: false,
+};
+
+// ── 국가 코드 매핑 ────────────────────────────────────────────────────────────
+
+const COUNTRY_CODES: Record<string, string[]> = {
+  KR:   ['KR'],
+  US:   ['US', 'CA', 'GB'],
+  EU:   ['DE', 'FR', 'IT', 'ES', 'SE', 'NO', 'DK', 'NL'],
+  JP:   ['JP'],
+  CN:   ['CN', 'TW', 'HK'],
+  ASIA: ['TH', 'IN', 'PH', 'SG', 'ID'],
+};
+
+// ── 스텝 흐름 계산 ────────────────────────────────────────────────────────────
+
+function computeActiveSteps(survey: SurveyState): StepId[] {
+  const steps: StepId[] = ['q1'];
+  const ct = survey.contentTypes;
+  const notAny = ct.length > 0 && !ct.includes('any');
+
+  if (notAny && ct.includes('drama'))  steps.push('q1_1', 'q1_2');
+  if (notAny && ct.includes('movie'))  steps.push('q2');
+
+  steps.push('q3', 'q4', 'q5', 'q6', 'q7', 'q8');
+  return steps;
 }
 
-const QUESTIONS: QuizQuestion[] = [
-  {
-    id: 'mood',
-    text: '지금 어떤 거 보고 싶어?',
-    subText: '오늘의 기분에 맞는 걸 골라봐',
-    options: [
-      { label: '웃겨야 함', emoji: '🤣', desired: { laughter: 9, lightness: 8, tension: 2 } },
-      { label: '감동 받고 싶어', emoji: '😭', desired: { emotion: 9, romance: 5, healing: 6 } },
-      { label: '무섭고 스릴있게', emoji: '😱', desired: { horror: 8, tension: 8, lightness: 2 } },
-      { label: '따뜻하게 힐링', emoji: '🌿', desired: { healing: 9, lightness: 7, emotion: 5 } },
-      { label: '긴장감 빡빡하게', emoji: '💀', desired: { tension: 9, lightness: 2, horror: 4 } },
-      { label: '로맨틱하게', emoji: '💕', desired: { romance: 9, emotion: 6, laughter: 4 } },
-    ],
-  },
-  {
-    id: 'focus',
-    text: '오늘 얼마나 집중할 수 있어?',
-    options: [
-      { label: '자막 다 읽고 집중할게', emoji: '🎯', desired: { concentration: 9, background_watch: 1 } },
-      { label: '적당히 볼게', emoji: '😌', desired: { concentration: 5, background_watch: 5 } },
-      { label: '틀어놓고 딴짓할 거야', emoji: '📱', desired: { background_watch: 9, concentration: 2 } },
-    ],
-  },
-  {
-    id: 'viewer',
-    text: '누구랑 봐?',
-    options: [
-      { label: '혼자 볼 거임', emoji: '🎧', desired: { solo: 10 } },
-      { label: '남친 / 여친이랑', emoji: '👫', desired: { with_partner: 10 } },
-      { label: '가족이랑', emoji: '👨‍👩‍👦', desired: { with_family: 10 } },
-      { label: '친구들이랑', emoji: '🍿', desired: { with_friend: 10 } },
-    ],
-  },
-  {
-    id: 'length',
-    text: '얼마나 볼 수 있어?',
-    options: [
-      { label: '영화 한 편만', emoji: '🎬', desired: { episode_length: 1 } },
-      { label: '몇 편 정도', emoji: '📺', desired: { episode_length: 4 } },
-      { label: '정주행 각이야', emoji: '🔥', desired: { episode_length: 9 } },
-    ],
-  },
-  {
-    id: 'rating',
-    text: '수위는 어떻게?',
-    options: [
-      { label: '순한 맛으로', emoji: '🥛', desired: { violence: 1, adult: 0 } },
-      { label: '중간 정도', emoji: '🌶', desired: { violence: 5, adult: 3 } },
-      { label: '강한 맛도 괜찮아', emoji: '🔥', desired: { violence: 9, adult: 7 } },
-    ],
-  },
+function getNextStep(current: StepId, survey: SurveyState): StepId | null {
+  const steps = computeActiveSteps(survey);
+  const idx = steps.indexOf(current);
+  return idx === -1 || idx === steps.length - 1 ? null : steps[idx + 1];
+}
+
+// ── desired 태그 병합 ─────────────────────────────────────────────────────────
+
+function mergeDesired(base: Desired, add: Desired): Desired {
+  const result: Desired = { ...base };
+  for (const [k, v] of Object.entries(add) as [TagKey, number][]) {
+    result[k] = result[k] !== undefined ? Math.round((result[k]! + v) / 2) : v;
+  }
+  return result;
+}
+
+// ── 멀티셀렉트 exclusive 토글 ──────────────────────────────────────────────────
+
+function toggleMulti(
+  prev: string[],
+  value: string,
+  exclusiveValues: string[]
+): string[] {
+  if (exclusiveValues.includes(value)) return [value];
+  const withoutExclusive = prev.filter(v => !exclusiveValues.includes(v));
+  if (withoutExclusive.includes(value)) return withoutExclusive.filter(v => v !== value);
+  return [...withoutExclusive, value];
+}
+
+// ── Q1 선택지 ─────────────────────────────────────────────────────────────────
+
+const Q1_OPTIONS = [
+  { label: '영화',        emoji: '🎬', value: 'movie' },
+  { label: '드라마',      emoji: '📺', value: 'drama' },
+  { label: '애니메이션',  emoji: '✨', value: 'animation' },
+  { label: '다큐멘터리',  emoji: '🎥', value: 'documentary' },
+  { label: '예능',        emoji: '🎭', value: 'variety' },
+  { label: '상관없음',    emoji: '🎲', value: 'any' },
 ];
 
-// ── 설문 답변 병합 ─────────────────────────────────────────────────────────────
+// ── Q3 선택지 ─────────────────────────────────────────────────────────────────
 
-function mergeDesired(answerList: Desired[]): Desired {
-  const sums: Record<string, number> = {};
-  const counts: Record<string, number> = {};
-  for (const ans of answerList) {
-    for (const [key, val] of Object.entries(ans) as [TagKey, number][]) {
-      sums[key] = (sums[key] ?? 0) + val;
-      counts[key] = (counts[key] ?? 0) + 1;
-    }
-  }
-  const merged: Desired = {};
-  for (const key of Object.keys(sums) as TagKey[]) {
-    merged[key] = Math.round(sums[key] / counts[key]);
-  }
-  return merged;
-}
+const Q3_OPTIONS = [
+  { label: '한국',        emoji: '🇰🇷', value: 'KR' },
+  { label: '헐리웃',      emoji: '🎬', value: 'US' },
+  { label: '유럽',        emoji: '🌍', value: 'EU' },
+  { label: '일본',        emoji: '🗾', value: 'JP' },
+  { label: '중국',        emoji: '🇨🇳', value: 'CN' },
+  { label: '기타 아시아', emoji: '🌏', value: 'ASIA' },
+  { label: '상관없음',    emoji: '🌐', value: 'any' },
+];
 
-// ── 뷰 타입 ──────────────────────────────────────────────────────────────────
+// ── Q4 선택지 ─────────────────────────────────────────────────────────────────
 
-type View = 'intro' | 'quiz' | 'loading' | 'result';
+const Q4_OPTIONS = [
+  { label: '힐링이 필요해',       emoji: '🌿', desired: { healing: 9, lightness: 7 } as Desired },
+  { label: '자극이 필요해',       emoji: '⚡️', desired: { tension: 8, laughter: 6 } as Desired },
+  { label: '그냥 멍때리고 싶어',  emoji: '🌀', desired: { background_watch: 9, lightness: 8, concentration: 2 } as Desired },
+  { label: '울고 싶은 기분',      emoji: '😭', desired: { emotion: 9, romance: 5 } as Desired },
+];
 
-// ── 메인 컴포넌트 ──────────────────────────────────────────────────────────────
+// ── Q5 선택지 ─────────────────────────────────────────────────────────────────
+
+const Q5_OPTIONS = [
+  { label: '가볍게 웃을 수 있는',     emoji: '😂', desired: { laughter: 9, lightness: 8 } as Desired },
+  { label: '긴장감 넘치는',          emoji: '😰', desired: { tension: 9 } as Desired },
+  { label: '감동적인',               emoji: '🥺', desired: { emotion: 8, romance: 4 } as Desired },
+  { label: '무서운',                 emoji: '😱', desired: { horror: 8, tension: 5 } as Desired },
+  { label: '설레는',                 emoji: '💕', desired: { romance: 9, lightness: 6 } as Desired },
+  { label: '뭔가 생각하게 되는',     emoji: '🤔', desired: { concentration: 8 } as Desired },
+];
+
+// ── Q6 선택지 ─────────────────────────────────────────────────────────────────
+
+const Q6_OPTIONS = [
+  { label: '자막 집중해서 볼거야',   emoji: '🎯', desired: { concentration: 8, background_watch: 2 } as Desired },
+  { label: '그냥 틀어만 놓을거야',   emoji: '📱', desired: { background_watch: 8, concentration: 2 } as Desired },
+  { label: '중간 정도',             emoji: '😌', desired: { concentration: 5, background_watch: 5 } as Desired },
+];
+
+// ── Q7 선택지 ─────────────────────────────────────────────────────────────────
+
+const Q7_OPTIONS = [
+  { label: '혼자',    emoji: '🎧', desired: { solo: 10 } as Desired },
+  { label: '연인이랑', emoji: '👫', desired: { with_partner: 10 } as Desired },
+  { label: '가족이랑', emoji: '👨‍👩‍👦', desired: { with_family: 10 } as Desired },
+  { label: '친구랑',  emoji: '🍿', desired: { with_friend: 10 } as Desired },
+];
+
+// ── Q8 선택지 ─────────────────────────────────────────────────────────────────
+
+const Q8_OPTIONS = [
+  { label: '폭력적인 장면', emoji: '🔪', value: 'violence' },
+  { label: '성인 콘텐츠',   emoji: '🔞', value: 'adult'   },
+  { label: '무서운 거',     emoji: '👻', value: 'horror'  },
+  { label: '너무 슬픈 거',  emoji: '😢', value: 'sad'     },
+  { label: '없음',          emoji: '✅', value: 'none'    },
+];
+
+// ── 메인 페이지 ────────────────────────────────────────────────────────────────
 
 export default function NetflixPage() {
-  const [view, setView] = useState<View>('intro');
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Desired[]>([]);
-  const [results, setResults] = useState<RecommendResult[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [view,         setView]         = useState<View>('intro');
+  const [currentStep,  setCurrentStep]  = useState<StepId>('q1');
+  const [stepHistory,  setStepHistory]  = useState<Array<{ step: StepId; survey: SurveyState }>>([]);
+  const [survey,       setSurvey]       = useState<SurveyState>(INITIAL_SURVEY);
+  const [multiTemp,    setMultiTemp]    = useState<string[]>([]);
+  const [results,      setResults]      = useState<RecommendResult[]>([]);
+  const [error,        setError]        = useState<string | null>(null);
+  const [hiddenIds,    setHiddenIds]    = useState<Set<string>>(new Set());
 
-  function reset() {
+  // 멀티셀렉트 스텝 진입 시 기존 값으로 초기화 (뒤로가기 지원)
+  useEffect(() => {
+    if (view !== 'quiz') return;
+    if (currentStep === 'q1') {
+      setMultiTemp(survey.contentTypes);
+    } else if (currentStep === 'q3') {
+      setMultiTemp(survey.countries);
+    } else if (currentStep === 'q8') {
+      const a: string[] = [];
+      if (survey.avoidViolence) a.push('violence');
+      if (survey.avoidAdult)    a.push('adult');
+      if (survey.avoidHorror)   a.push('horror');
+      if (survey.avoidSad)      a.push('sad');
+      setMultiTemp(a);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, view]);
+
+  // ── 상태 초기화 ─────────────────────────────────────────────────────────────
+
+  function resetAll() {
     setView('intro');
-    setQuestionIndex(0);
-    setAnswers([]);
+    setCurrentStep('q1');
+    setStepHistory([]);
+    setSurvey(INITIAL_SURVEY);
+    setMultiTemp([]);
     setResults([]);
     setError(null);
+    setHiddenIds(new Set());
   }
 
   function handleStart() {
-    reset();
+    resetAll();
     setView('quiz');
   }
 
-  async function handleAnswer(desired: Desired) {
-    const newAnswers = [...answers, desired];
-    setAnswers(newAnswers);
-
-    if (questionIndex < QUESTIONS.length - 1) {
-      setQuestionIndex(questionIndex + 1);
-    } else {
-      // 마지막 질문 → 추천 API 호출
-      setView('loading');
-      try {
-        const merged = mergeDesired(newAnswers);
-        const res = await fetch('/api/netflix/recommend', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ desired: merged }),
-        });
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error ?? `HTTP ${res.status}`);
-        }
-        const data: RecommendResult[] = await res.json();
-        setResults(data);
-        setView('result');
-      } catch (e) {
-        setError(e instanceof Error ? e.message : String(e));
-        setView('result');
-      }
-    }
-  }
+  // ── 뒤로가기 ────────────────────────────────────────────────────────────────
 
   function handleBack() {
-    if (questionIndex === 0) {
+    if (stepHistory.length === 0) {
       setView('intro');
-      setAnswers([]);
+      return;
+    }
+    const prev = stepHistory[stepHistory.length - 1];
+    setStepHistory(h => h.slice(0, -1));
+    setCurrentStep(prev.step);
+    setSurvey(prev.survey);
+  }
+
+  // ── 공통: 다음 스텝으로 진행 ────────────────────────────────────────────────
+
+  function advance(newSurvey: SurveyState) {
+    const next = getNextStep(currentStep, newSurvey);
+    setStepHistory(h => [...h, { step: currentStep, survey }]);
+    setSurvey(newSurvey);
+    if (next === null) {
+      void submitSurvey(newSurvey);
     } else {
-      setQuestionIndex(questionIndex - 1);
-      setAnswers(answers.slice(0, -1));
+      setCurrentStep(next);
     }
   }
+
+  // ── API 호출 ─────────────────────────────────────────────────────────────────
+
+  async function submitSurvey(s: SurveyState) {
+    setView('loading');
+    try {
+      const contentTypes =
+        s.contentTypes.length === 0 || s.contentTypes.includes('any') ? null : s.contentTypes;
+
+      const countryCodes =
+        s.countries.length === 0 || s.countries.includes('any')
+          ? null
+          : s.countries.flatMap(g => COUNTRY_CODES[g] ?? []);
+
+      const res = await fetch('/api/netflix/recommend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contentTypes,
+          isEnded: s.isEnded,
+          episodeMin: s.episodeMin,
+          episodeMax: s.episodeMax,
+          runtimeMin: s.runtimeMin,
+          runtimeMax: s.runtimeMax,
+          countryCodes,
+          desired: s.desired,
+          avoidViolence: s.avoidViolence,
+          avoidAdult: s.avoidAdult,
+          avoidHorror: s.avoidHorror,
+          avoidSad: s.avoidSad,
+        }),
+      });
+
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error ?? `HTTP ${res.status}`);
+      }
+
+      const data: RecommendResult[] = await res.json();
+
+      if (data.length === 0 || (data[0]?.match_score ?? 0) < 20) {
+        setResults(data);
+        setView('no-result');
+      } else {
+        setResults(data);
+        setView('result');
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setView('result');
+    }
+  }
+
+  // ── 단일 선택 핸들러 ─────────────────────────────────────────────────────────
+
+  function handleQ1_1(isEnded: boolean | null) {
+    advance({ ...survey, isEnded });
+  }
+  function handleQ1_2(episodeMin: number | null, episodeMax: number | null) {
+    advance({ ...survey, episodeMin, episodeMax });
+  }
+  function handleQ2(runtimeMin: number | null, runtimeMax: number | null) {
+    advance({ ...survey, runtimeMin, runtimeMax });
+  }
+  function handleQ4(desired: Desired) {
+    advance({ ...survey, desired: mergeDesired(survey.desired, desired) });
+  }
+  function handleQ5(desired: Desired) {
+    advance({ ...survey, desired: mergeDesired(survey.desired, desired) });
+  }
+  function handleQ6(desired: Desired) {
+    advance({ ...survey, desired: mergeDesired(survey.desired, desired) });
+  }
+  function handleQ7(desired: Desired) {
+    advance({ ...survey, desired: mergeDesired(survey.desired, desired) });
+  }
+
+  // ── 다중 선택 확인 핸들러 ────────────────────────────────────────────────────
+
+  function handleQ1Confirm() {
+    if (multiTemp.length === 0) return;
+    advance({ ...survey, contentTypes: multiTemp });
+  }
+  function handleQ3Confirm() {
+    if (multiTemp.length === 0) return;
+    advance({ ...survey, countries: multiTemp });
+  }
+  function handleQ8Confirm() {
+    if (multiTemp.length === 0) return;
+    const isNone = multiTemp.includes('none');
+    advance({
+      ...survey,
+      avoidViolence: !isNone && multiTemp.includes('violence'),
+      avoidAdult:    !isNone && multiTemp.includes('adult'),
+      avoidHorror:   !isNone && multiTemp.includes('horror'),
+      avoidSad:      !isNone && multiTemp.includes('sad'),
+    });
+  }
+
+  // ── 진행 상태 계산 ──────────────────────────────────────────────────────────
+
+  const activeSteps   = computeActiveSteps(survey);
+  const stepNumber    = stepHistory.length + 1;
+  const totalSteps    = activeSteps.length;
+
+  // ── 렌더 ────────────────────────────────────────────────────────────────────
 
   return (
     <main className="min-h-screen flex justify-center items-start" style={{ background: '#141414' }}>
       <div className="w-full max-w-[390px] min-h-screen flex flex-col" style={{ background: '#141414' }}>
+
         {view === 'intro' && <IntroView onStart={handleStart} />}
+
         {view === 'quiz' && (
-          <QuizView
-            question={QUESTIONS[questionIndex]}
-            questionIndex={questionIndex}
-            total={QUESTIONS.length}
-            onAnswer={handleAnswer}
+          <QuizStepView
+            step={currentStep}
+            stepNumber={stepNumber}
+            totalSteps={totalSteps}
+            multiTemp={multiTemp}
+            setMultiTemp={setMultiTemp}
             onBack={handleBack}
+            onQ1Confirm={handleQ1Confirm}
+            onQ1_1={handleQ1_1}
+            onQ1_2={handleQ1_2}
+            onQ2={handleQ2}
+            onQ3Confirm={handleQ3Confirm}
+            onQ4={handleQ4}
+            onQ5={handleQ5}
+            onQ6={handleQ6}
+            onQ7={handleQ7}
+            onQ8Confirm={handleQ8Confirm}
           />
         )}
+
         {view === 'loading' && <LoadingView />}
+
         {view === 'result' && (
-          <ResultView results={results} error={error} onRestart={reset} />
+          <ResultView
+            results={results}
+            error={error}
+            hiddenIds={hiddenIds}
+            onHide={id => setHiddenIds(prev => new Set([...prev, id]))}
+            onRestart={resetAll}
+          />
         )}
+
+        {view === 'no-result' && <NoResultView onRestart={handleStart} />}
+
       </div>
     </main>
   );
 }
 
-// ── 인트로 화면 ────────────────────────────────────────────────────────────────
+// ── 인트로 ────────────────────────────────────────────────────────────────────
 
 function IntroView({ onStart }: { onStart: () => void }) {
   return (
     <div className="flex flex-col flex-1 animate-fade-slide">
-      {/* 상단 뒤로가기 */}
       <div className="px-5 pt-5">
         <Link
           href="/"
@@ -207,38 +416,24 @@ function IntroView({ onStart }: { onStart: () => void }) {
         </Link>
       </div>
 
-      {/* 메인 콘텐츠 */}
       <div className="flex flex-col flex-1 items-center justify-center px-6 gap-10">
         <div className="flex flex-col items-center gap-8">
-          {/* 넷플릭스 로고 스타일 */}
           <div className="flex flex-col items-center gap-2">
-            <div
-              className="text-5xl font-bold tracking-tight"
-              style={{ color: '#E50914', fontFamily: 'NeoDGM, sans-serif' }}
-            >
-              넷플
-            </div>
+            <div className="text-5xl font-bold tracking-tight" style={{ color: '#E50914' }}>넷플</div>
             <div className="text-lg font-medium" style={{ color: '#888' }}>추천기</div>
           </div>
-
           <div className="text-center flex flex-col gap-3">
             <h1 className="text-2xl font-bold leading-tight" style={{ color: '#fff' }}>
               오늘 뭐볼까?<br />넷플에서 골라봐
             </h1>
             <p className="text-sm leading-relaxed" style={{ color: '#888' }}>
-              5가지 질문으로 딱 맞는 콘텐츠 10개 추려줄게
+              몇 가지 질문으로 딱 맞는 콘텐츠 추려줄게
             </p>
           </div>
-
-          {/* 장식 요소 */}
           <div className="flex gap-3">
-            {['🎬', '🍿', '😱', '💕', '😂'].map((emoji, i) => (
-              <div
-                key={i}
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-                style={{ background: '#1f1f1f' }}
-              >
-                {emoji}
+            {['🎬', '🍿', '😱', '💕', '😂'].map((e, i) => (
+              <div key={i} className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: '#1f1f1f' }}>
+                {e}
               </div>
             ))}
           </div>
@@ -252,32 +447,43 @@ function IntroView({ onStart }: { onStart: () => void }) {
           >
             시작하기
           </button>
-          <p className="text-center text-xs" style={{ color: '#555' }}>5가지 질문 · 1분 이내</p>
+          <p className="text-center text-xs" style={{ color: '#555' }}>1분 이내</p>
         </div>
       </div>
     </div>
   );
 }
 
-// ── 설문 화면 ─────────────────────────────────────────────────────────────────
+// ── 설문 스텝 ─────────────────────────────────────────────────────────────────
 
-interface QuizViewProps {
-  question: QuizQuestion;
-  questionIndex: number;
-  total: number;
-  onAnswer: (desired: Desired) => void;
+interface QuizStepViewProps {
+  step: StepId;
+  stepNumber: number;
+  totalSteps: number;
+  multiTemp: string[];
+  setMultiTemp: (v: string[]) => void;
   onBack: () => void;
+  onQ1Confirm: () => void;
+  onQ1_1: (isEnded: boolean | null) => void;
+  onQ1_2: (min: number | null, max: number | null) => void;
+  onQ2: (min: number | null, max: number | null) => void;
+  onQ3Confirm: () => void;
+  onQ4: (d: Desired) => void;
+  onQ5: (d: Desired) => void;
+  onQ6: (d: Desired) => void;
+  onQ7: (d: Desired) => void;
+  onQ8Confirm: () => void;
 }
 
-function QuizView({ question, questionIndex, total, onAnswer, onBack }: QuizViewProps) {
-  const progress = ((questionIndex + 1) / total) * 100;
+function QuizStepView(p: QuizStepViewProps) {
+  const progress = (p.stepNumber / p.totalSteps) * 100;
 
   return (
     <div className="flex flex-col flex-1 px-5 pt-5 pb-6 gap-5 animate-fade-slide">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <button
-          onClick={onBack}
+          onClick={p.onBack}
           className="flex items-center gap-1.5 text-sm font-medium active:scale-95 transition-all"
           style={{ color: '#888' }}
         >
@@ -287,7 +493,7 @@ function QuizView({ question, questionIndex, total, onAnswer, onBack }: QuizView
           이전
         </button>
         <span className="text-xs font-semibold tracking-widest" style={{ color: '#666' }}>
-          {questionIndex + 1} / {total}
+          {p.stepNumber} / {p.totalSteps}
         </span>
         <div className="w-10" />
       </div>
@@ -300,33 +506,162 @@ function QuizView({ question, questionIndex, total, onAnswer, onBack }: QuizView
         />
       </div>
 
-      {/* 질문 */}
-      <div className="flex flex-col gap-2 pt-2">
-        <h2 className="text-xl font-bold leading-snug" style={{ color: '#fff' }}>
-          {question.text}
-        </h2>
-        {question.subText && (
-          <p className="text-sm" style={{ color: '#888' }}>{question.subText}</p>
-        )}
-      </div>
+      {/* 스텝별 렌더 */}
+      {p.step === 'q1' && (
+        <MultiStep
+          title="오늘 뭐 보고 싶어요?"
+          subTitle="복수 선택 가능해요"
+          options={Q1_OPTIONS}
+          selected={p.multiTemp}
+          exclusiveValues={['any']}
+          onChange={(v) => p.setMultiTemp(toggleMulti(p.multiTemp, v, ['any']))}
+          onConfirm={p.onQ1Confirm}
+        />
+      )}
 
-      {/* 선택지 */}
-      <div className="flex flex-col gap-2.5 flex-1 pt-2">
-        {question.options.map((opt) => (
+      {p.step === 'q1_1' && (
+        <SingleStep
+          title="완결난 드라마가 좋아요?"
+          options={[
+            { label: '완결난 거 보고 싶어', emoji: '✅' },
+            { label: '완결 안 나도 상관없어', emoji: '📺' },
+          ]}
+          onSelect={(label) => {
+            p.onQ1_1(label.startsWith('완결난') ? true : null);
+          }}
+        />
+      )}
+
+      {p.step === 'q1_2' && (
+        <SingleStep
+          title="몇 편 정도 볼 수 있어요?"
+          options={[
+            { label: '8편 이내', emoji: '✨' },
+            { label: '8~16편', emoji: '📺' },
+            { label: '길어도 상관없어', emoji: '🔥' },
+          ]}
+          onSelect={(label) => {
+            if (label === '8편 이내')   p.onQ1_2(null, 8);
+            else if (label === '8~16편') p.onQ1_2(8, 16);
+            else                         p.onQ1_2(null, null);
+          }}
+        />
+      )}
+
+      {p.step === 'q2' && (
+        <SingleStep
+          title="얼마나 볼 수 있어요?"
+          options={[
+            { label: '1시간 이내', emoji: '⏱' },
+            { label: '1~2시간',   emoji: '🕐' },
+            { label: '2시간 이상', emoji: '🎬' },
+            { label: '시간 상관없어', emoji: '⏳' },
+          ]}
+          onSelect={(label) => {
+            if (label === '1시간 이내')    p.onQ2(null, 60);
+            else if (label === '1~2시간')   p.onQ2(60, 120);
+            else if (label === '2시간 이상') p.onQ2(120, null);
+            else                             p.onQ2(null, null);
+          }}
+        />
+      )}
+
+      {p.step === 'q3' && (
+        <MultiStep
+          title="어느 나라 콘텐츠?"
+          subTitle="복수 선택 가능해요"
+          options={Q3_OPTIONS}
+          selected={p.multiTemp}
+          exclusiveValues={['any']}
+          onChange={(v) => p.setMultiTemp(toggleMulti(p.multiTemp, v, ['any']))}
+          onConfirm={p.onQ3Confirm}
+        />
+      )}
+
+      {p.step === 'q4' && (
+        <SingleStep
+          title="지금 멘탈 상태가 어때요?"
+          options={Q4_OPTIONS.map(o => ({ label: o.label, emoji: o.emoji }))}
+          onSelect={(label) => {
+            const opt = Q4_OPTIONS.find(o => o.label === label)!;
+            p.onQ4(opt.desired);
+          }}
+        />
+      )}
+
+      {p.step === 'q5' && (
+        <SingleStep
+          title="어떤 느낌이 보고 싶어요?"
+          options={Q5_OPTIONS.map(o => ({ label: o.label, emoji: o.emoji }))}
+          onSelect={(label) => {
+            const opt = Q5_OPTIONS.find(o => o.label === label)!;
+            p.onQ5(opt.desired);
+          }}
+        />
+      )}
+
+      {p.step === 'q6' && (
+        <SingleStep
+          title="얼마나 집중할 수 있어요?"
+          options={Q6_OPTIONS.map(o => ({ label: o.label, emoji: o.emoji }))}
+          onSelect={(label) => {
+            const opt = Q6_OPTIONS.find(o => o.label === label)!;
+            p.onQ6(opt.desired);
+          }}
+        />
+      )}
+
+      {p.step === 'q7' && (
+        <SingleStep
+          title="누구랑 봐요?"
+          options={Q7_OPTIONS.map(o => ({ label: o.label, emoji: o.emoji }))}
+          onSelect={(label) => {
+            const opt = Q7_OPTIONS.find(o => o.label === label)!;
+            p.onQ7(opt.desired);
+          }}
+        />
+      )}
+
+      {p.step === 'q8' && (
+        <MultiStep
+          title="피하고 싶은 게 있어요?"
+          subTitle="복수 선택 가능해요"
+          options={Q8_OPTIONS}
+          selected={p.multiTemp}
+          exclusiveValues={['none']}
+          onChange={(v) => p.setMultiTemp(toggleMulti(p.multiTemp, v, ['none']))}
+          onConfirm={p.onQ8Confirm}
+          confirmLabel="결과 보기"
+        />
+      )}
+    </div>
+  );
+}
+
+// ── 단일 선택 공통 컴포넌트 ───────────────────────────────────────────────────
+
+interface SingleStepProps {
+  title: string;
+  options: { label: string; emoji: string }[];
+  onSelect: (label: string) => void;
+}
+
+function SingleStep({ title, options, onSelect }: SingleStepProps) {
+  return (
+    <div className="flex flex-col gap-5 flex-1 pt-2">
+      <h2 className="text-xl font-bold leading-snug" style={{ color: '#fff' }}>{title}</h2>
+      <div className="flex flex-col gap-2.5">
+        {options.map(opt => (
           <button
             key={opt.label}
-            onClick={() => onAnswer(opt.desired)}
+            onClick={() => onSelect(opt.label)}
             className="w-full py-4 px-5 rounded-2xl text-left flex items-center gap-3 active:scale-[0.98] transition-all"
-            style={{
-              background: '#1f1f1f',
-              border: '1px solid #2a2a2a',
-              color: '#fff',
-            }}
-            onMouseEnter={(e) => {
+            style={{ background: '#1f1f1f', border: '1px solid #2a2a2a', color: '#fff' }}
+            onMouseEnter={e => {
               (e.currentTarget as HTMLButtonElement).style.borderColor = '#E50914';
               (e.currentTarget as HTMLButtonElement).style.background = '#2a0a0a';
             }}
-            onMouseLeave={(e) => {
+            onMouseLeave={e => {
               (e.currentTarget as HTMLButtonElement).style.borderColor = '#2a2a2a';
               (e.currentTarget as HTMLButtonElement).style.background = '#1f1f1f';
             }}
@@ -340,7 +675,61 @@ function QuizView({ question, questionIndex, total, onAnswer, onBack }: QuizView
   );
 }
 
-// ── 로딩 화면 ─────────────────────────────────────────────────────────────────
+// ── 다중 선택 공통 컴포넌트 ───────────────────────────────────────────────────
+
+interface MultiStepProps {
+  title: string;
+  subTitle?: string;
+  options: { label: string; emoji: string; value: string }[];
+  selected: string[];
+  exclusiveValues: string[];
+  onChange: (value: string) => void;
+  onConfirm: () => void;
+  confirmLabel?: string;
+}
+
+function MultiStep({
+  title, subTitle, options, selected, onChange, onConfirm, confirmLabel = '다음',
+}: MultiStepProps) {
+  return (
+    <div className="flex flex-col gap-4 flex-1 pt-2">
+      <div>
+        <h2 className="text-xl font-bold leading-snug" style={{ color: '#fff' }}>{title}</h2>
+        {subTitle && <p className="text-sm mt-1" style={{ color: '#888' }}>{subTitle}</p>}
+      </div>
+      <div className="grid grid-cols-2 gap-2.5 flex-1">
+        {options.map(opt => {
+          const isSelected = selected.includes(opt.value);
+          return (
+            <button
+              key={opt.value}
+              onClick={() => onChange(opt.value)}
+              className="py-4 px-3 rounded-2xl flex flex-col items-center gap-1.5 active:scale-[0.97] transition-all"
+              style={{
+                background: isSelected ? '#2a0a0a' : '#1f1f1f',
+                border: `1px solid ${isSelected ? '#E50914' : '#2a2a2a'}`,
+                color: isSelected ? '#fff' : '#aaa',
+              }}
+            >
+              <span className="text-2xl">{opt.emoji}</span>
+              <span className="text-sm font-medium text-center leading-tight">{opt.label}</span>
+            </button>
+          );
+        })}
+      </div>
+      <button
+        onClick={onConfirm}
+        disabled={selected.length === 0}
+        className="w-full py-4 rounded-2xl text-white text-base font-bold active:scale-95 transition-transform disabled:opacity-40"
+        style={{ background: '#E50914', boxShadow: selected.length > 0 ? '0 8px 24px rgba(229,9,20,0.3)' : 'none' }}
+      >
+        {confirmLabel}
+      </button>
+    </div>
+  );
+}
+
+// ── 로딩 ─────────────────────────────────────────────────────────────────────
 
 function LoadingView() {
   return (
@@ -356,26 +745,50 @@ function LoadingView() {
           <p className="text-lg font-bold" style={{ color: '#fff' }}>찾고 있어...</p>
           <p className="text-sm" style={{ color: '#888' }}>딱 맞는 콘텐츠 고르는 중</p>
         </div>
-        {/* 점 세 개 애니메이션 */}
         <div className="flex gap-2 pt-2">
-          {[0, 1, 2].map((i) => (
+          {[0, 1, 2].map(i => (
             <div
               key={i}
               className="w-2 h-2 rounded-full"
               style={{
                 background: '#E50914',
-                animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
+                animation: `dot-pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
               }}
             />
           ))}
         </div>
       </div>
       <style>{`
-        @keyframes pulse {
+        @keyframes dot-pulse {
           0%, 100% { opacity: 0.3; transform: scale(0.8); }
-          50% { opacity: 1; transform: scale(1.2); }
+          50%       { opacity: 1;   transform: scale(1.2); }
         }
       `}</style>
+    </div>
+  );
+}
+
+// ── 결과 없음 ─────────────────────────────────────────────────────────────────
+
+function NoResultView({ onRestart }: { onRestart: () => void }) {
+  return (
+    <div className="flex flex-col flex-1 items-center justify-center gap-8 px-6 animate-fade-slide">
+      <div className="flex flex-col items-center gap-4 text-center">
+        <span className="text-6xl">📺</span>
+        <h2 className="text-xl font-bold" style={{ color: '#fff' }}>
+          에휴 그냥<br />유튜브나 보세요..
+        </h2>
+        <p className="text-sm" style={{ color: '#666' }}>
+          조건에 맞는 콘텐츠를 못 찾겠어
+        </p>
+      </div>
+      <button
+        onClick={onRestart}
+        className="w-full py-4 rounded-2xl text-white text-base font-bold active:scale-95 transition-transform"
+        style={{ background: '#E50914', boxShadow: '0 8px 24px rgba(229,9,20,0.4)' }}
+      >
+        다시 고르기
+      </button>
     </div>
   );
 }
@@ -385,20 +798,21 @@ function LoadingView() {
 interface ResultViewProps {
   results: RecommendResult[];
   error: string | null;
+  hiddenIds: Set<string>;
+  onHide: (id: string) => void;
   onRestart: () => void;
 }
 
-function ResultView({ results, error, onRestart }: ResultViewProps) {
+function ResultView({ results, error, hiddenIds, onHide, onRestart }: ResultViewProps) {
+  const visible = results.filter(r => !hiddenIds.has(r.id));
+
   return (
     <div className="flex flex-col flex-1 animate-fade-slide">
-      {/* 헤더 */}
       <div className="px-5 pt-5 pb-4 flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold" style={{ color: '#fff' }}>
-            오늘의 추천 🎬
-          </h2>
+          <h2 className="text-xl font-bold" style={{ color: '#fff' }}>오늘의 추천 🎬</h2>
           <p className="text-xs mt-0.5" style={{ color: '#888' }}>
-            {error ? '오류가 발생했어요' : `딱 맞는 ${results.length}개 골라왔어`}
+            {error ? '오류가 발생했어요' : `${visible.length}개 골라왔어`}
           </p>
         </div>
         <button
@@ -411,27 +825,30 @@ function ResultView({ results, error, onRestart }: ResultViewProps) {
       </div>
 
       {error && (
-        <div className="mx-5 px-4 py-3 rounded-xl text-sm" style={{ background: '#2a0a0a', color: '#ff6b6b' }}>
+        <div className="mx-5 mb-3 px-4 py-3 rounded-xl text-sm" style={{ background: '#2a0a0a', color: '#ff6b6b' }}>
           {error}
         </div>
       )}
 
-      {/* 카드 리스트 */}
-      <div className="flex flex-col gap-3 px-5 pb-8 pt-2">
-        {results.length === 0 && !error && (
-          <div className="flex flex-col items-center gap-3 pt-16" style={{ color: '#666' }}>
+      <div className="flex flex-col gap-3 px-5 pb-8 pt-1">
+        {visible.length === 0 && !error && (
+          <div className="flex flex-col items-center gap-3 pt-16 text-center">
             <span className="text-4xl">🎬</span>
-            <p className="text-sm">아직 데이터가 없어. 내일 다시 와봐!</p>
+            <p className="text-sm" style={{ color: '#666' }}>아직 데이터가 없어. 내일 다시 와봐!</p>
           </div>
         )}
-        {results.map((item, idx) => (
-          <ContentCard key={item.id} item={item} rank={idx + 1} />
+        {visible.map((item, idx) => (
+          <ContentCard
+            key={item.id}
+            item={item}
+            rank={idx + 1}
+            onHide={() => onHide(item.id)}
+          />
         ))}
       </div>
 
-      {/* 하단 버튼 */}
-      {results.length > 0 && (
-        <div className="px-5 pb-6 mt-auto">
+      {visible.length > 0 && (
+        <div className="px-5 pb-8 mt-auto">
           <button
             onClick={onRestart}
             className="w-full py-4 rounded-2xl text-white text-base font-bold active:scale-95 transition-transform"
@@ -447,142 +864,169 @@ function ResultView({ results, error, onRestart }: ResultViewProps) {
 
 // ── 콘텐츠 카드 ───────────────────────────────────────────────────────────────
 
-function ContentCard({ item, rank }: { item: RecommendResult; rank: number }) {
-  const matchPct = item.match_score;
-  const matchColor =
-    matchPct >= 80 ? '#4ade80' : matchPct >= 60 ? '#facc15' : '#f87171';
+function getNetflixDeepLink(netflixLink: string | null): string | null {
+  if (!netflixLink) return null;
+  const m = netflixLink.match(/\/title\/(\d+)/);
+  return m ? `netflix://title/${m[1]}` : null;
+}
 
-  const typeLabel =
-    item.content_type === 'movie'
-      ? '영화'
-      : item.content_type === 'drama'
-      ? '드라마'
-      : item.content_type === 'animation'
-      ? '애니'
-      : item.content_type === 'documentary'
-      ? '다큐'
-      : '예능';
+function getNaverSearchUrl(title: string): string {
+  return `https://search.naver.com/search.naver?query=${encodeURIComponent(title)}`;
+}
+
+const TYPE_LABEL: Record<string, string> = {
+  movie: '영화', drama: '드라마', animation: '애니',
+  documentary: '다큐', variety: '예능',
+};
+
+interface ContentCardProps {
+  item: RecommendResult;
+  rank: number;
+  onHide: () => void;
+}
+
+function ContentCard({ item, rank, onHide }: ContentCardProps) {
+  const matchPct   = item.match_score;
+  const matchColor = matchPct >= 80 ? '#4ade80' : matchPct >= 60 ? '#facc15' : '#f87171';
+  const deepLink   = getNetflixDeepLink(item.netflix_link);
 
   const lengthLabel =
     item.show_type === 'movie'
-      ? item.runtime
-        ? `${item.runtime}분`
-        : null
-      : item.episode_count
-      ? `${item.episode_count}화`
-      : null;
+      ? item.runtime ? `${item.runtime}분` : null
+      : item.episode_count ? `${item.episode_count}화` : null;
 
   return (
     <div
-      className="flex gap-3 rounded-2xl overflow-hidden active:scale-[0.99] transition-all"
+      className="rounded-2xl overflow-hidden"
       style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
     >
-      {/* 포스터 */}
-      <div className="relative shrink-0 w-20 h-28 overflow-hidden" style={{ background: '#0f0f0f' }}>
-        {/* 순위 배지 */}
-        <div
-          className="absolute top-1.5 left-1.5 w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold z-10"
-          style={{ background: '#E50914', color: '#fff' }}
-        >
-          {rank}
+      {/* 상단: 포스터 + 기본 정보 */}
+      <div className="flex gap-3">
+        {/* 포스터 */}
+        <div className="relative shrink-0 w-20 h-28 overflow-hidden" style={{ background: '#0f0f0f' }}>
+          <div
+            className="absolute top-1.5 left-1.5 w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold z-10"
+            style={{ background: '#E50914', color: '#fff' }}
+          >
+            {rank}
+          </div>
+          {item.poster_url ? (
+            <Image src={item.poster_url} alt={item.title} fill className="object-cover" sizes="80px" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-3xl">🎬</div>
+          )}
         </div>
-        {item.poster_url ? (
-          <Image
-            src={item.poster_url}
-            alt={item.title}
-            fill
-            className="object-cover"
-            sizes="80px"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-3xl">🎬</div>
-        )}
+
+        {/* 텍스트 */}
+        <div className="flex flex-col flex-1 py-3 pr-3 gap-1.5 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <h3
+              className="text-sm font-bold leading-snug flex-1 min-w-0"
+              style={{
+                color: '#fff',
+                overflow: 'hidden',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+              }}
+            >
+              {item.title}
+            </h3>
+            <span
+              className="shrink-0 px-1.5 py-0.5 rounded-md text-xs font-bold"
+              style={{ background: `${matchColor}22`, color: matchColor, border: `1px solid ${matchColor}44` }}
+            >
+              {matchPct}%
+            </span>
+          </div>
+
+          {/* 배지 */}
+          <div className="flex flex-wrap gap-1">
+            <span className="px-2 py-0.5 rounded-md text-xs" style={{ background: '#2a2a2a', color: '#E50914' }}>
+              {TYPE_LABEL[item.content_type] ?? item.content_type}
+            </span>
+            {item.release_year && (
+              <span className="px-2 py-0.5 rounded-md text-xs" style={{ background: '#2a2a2a', color: '#888' }}>
+                {item.release_year}
+              </span>
+            )}
+            {lengthLabel && (
+              <span className="px-2 py-0.5 rounded-md text-xs" style={{ background: '#2a2a2a', color: '#888' }}>
+                {lengthLabel}
+              </span>
+            )}
+          </div>
+
+          {item.genres.length > 0 && (
+            <p className="text-xs" style={{ color: '#666' }}>{item.genres.slice(0, 2).join(' · ')}</p>
+          )}
+
+          {item.overview && (
+            <p
+              className="text-xs leading-relaxed"
+              style={{
+                color: '#666',
+                overflow: 'hidden',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+              }}
+            >
+              {item.overview}
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* 정보 */}
-      <div className="flex flex-col flex-1 py-3 pr-3 gap-1.5 min-w-0">
-        {/* 제목 + 매치율 */}
-        <div className="flex items-start justify-between gap-2">
-          <h3
-            className="text-sm font-bold leading-snug flex-1 min-w-0"
-            style={{ color: '#fff', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}
+      {/* 하단: 액션 버튼 */}
+      <div
+        className="flex items-center gap-2 px-3 py-2.5"
+        style={{ borderTop: '1px solid #2a2a2a' }}
+      >
+        {/* 넷플릭스 앱 열기 */}
+        {deepLink && (
+          <a
+            href={deepLink}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-bold active:scale-95 transition-all"
+            style={{ background: '#E50914', color: '#fff' }}
           >
-            {item.title}
-          </h3>
-          <div
-            className="shrink-0 px-1.5 py-0.5 rounded-md text-xs font-bold"
-            style={{ background: `${matchColor}22`, color: matchColor, border: `1px solid ${matchColor}44` }}
-          >
-            {matchPct}%
-          </div>
-        </div>
-
-        {/* 태그 뱃지들 */}
-        <div className="flex flex-wrap gap-1">
-          <span
-            className="px-2 py-0.5 rounded-md text-xs"
-            style={{ background: '#2a2a2a', color: '#E50914' }}
-          >
-            {typeLabel}
-          </span>
-          {item.release_year && (
-            <span
-              className="px-2 py-0.5 rounded-md text-xs"
-              style={{ background: '#2a2a2a', color: '#888' }}
-            >
-              {item.release_year}
-            </span>
-          )}
-          {lengthLabel && (
-            <span
-              className="px-2 py-0.5 rounded-md text-xs"
-              style={{ background: '#2a2a2a', color: '#888' }}
-            >
-              {lengthLabel}
-            </span>
-          )}
-        </div>
-
-        {/* 장르 */}
-        {item.genres.length > 0 && (
-          <p className="text-xs" style={{ color: '#666' }}>
-            {item.genres.slice(0, 2).join(' · ')}
-          </p>
+            <span>▶</span>
+            <span>넷플에서 보기</span>
+          </a>
         )}
-
-        {/* 줄거리 */}
-        {item.overview && (
-          <p
-            className="text-xs leading-relaxed"
-            style={{
-              color: '#666',
-              overflow: 'hidden',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-            }}
-          >
-            {item.overview}
-          </p>
-        )}
-
-        {/* 넷플릭스 링크 */}
-        {item.netflix_link && (
+        {!deepLink && item.netflix_link && (
           <a
             href={item.netflix_link}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs font-medium mt-0.5"
-            style={{ color: '#E50914' }}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-bold active:scale-95 transition-all"
+            style={{ background: '#E50914', color: '#fff' }}
           >
-            넷플에서 보기
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
-              <polyline points="15,3 21,3 21,9" />
-              <line x1="10" y1="14" x2="21" y2="3" />
-            </svg>
+            <span>▶</span>
+            <span>넷플에서 보기</span>
           </a>
         )}
+
+        {/* 네이버 검색 */}
+        <a
+          href={getNaverSearchUrl(item.title)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-sm font-medium active:scale-95 transition-all"
+          style={{ background: '#1f1f1f', color: '#03c75a', border: '1px solid #2a2a2a' }}
+        >
+          검색
+        </a>
+
+        {/* 이건 봤어요 */}
+        <button
+          onClick={onHide}
+          className="flex items-center justify-center py-2.5 px-3 rounded-xl text-sm font-medium active:scale-95 transition-all"
+          style={{ background: '#1f1f1f', color: '#666', border: '1px solid #2a2a2a' }}
+          title="이건 봤어요"
+        >
+          봤어
+        </button>
       </div>
     </div>
   );
