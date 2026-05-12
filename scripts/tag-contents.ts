@@ -109,21 +109,55 @@ function isValidTags(obj: unknown): obj is Tags {
   return true;
 }
 
-/** 한 콘텐츠에 대해 Claude로 태그 산출 */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** 한 콘텐츠에 대해 Claude로 태그 산출. 429 발생 시 자동 재시도. */
 async function tagOne(anthropic: Anthropic, content: NetflixContent): Promise<Tags | null> {
+  const MAX_RETRIES = 3;
+  let attempt = 0;
+
+  while (attempt <= MAX_RETRIES) {
+    try {
+      const response = await anthropic.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1024,
+        // 시스템 블록 둘 다 캐싱 → 모든 콘텐츠에서 동일 → cache hit 누적
+        system: [
+          { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
+          { type: 'text', text: TAG_CRITERIA, cache_control: { type: 'ephemeral' } },
+        ],
+        messages: [
+          { role: 'user', content: buildUserPrompt(content) },
+        ],
+      });
+      return parseResponse(content, response);
+    } catch (e) {
+      // Rate limit이면 retry-after만큼 대기 후 재시도
+      if (e instanceof Anthropic.RateLimitError) {
+        const retryAfterHeader = e.headers?.get?.('retry-after');
+        const retryAfter = retryAfterHeader ? parseInt(retryAfterHeader, 10) : 5;
+        const waitMs = Math.max(retryAfter, 2) * 1000;
+        console.warn(
+          `[tag] ${content.id} (${content.title}): rate limit, ${waitMs}ms 대기 후 재시도 (${attempt + 1}/${MAX_RETRIES})`
+        );
+        await sleep(waitMs);
+        attempt++;
+        continue;
+      }
+      // 다른 에러는 즉시 실패 처리
+      console.error(`[tag] ${content.id} (${content.title}): API 호출 실패`, e);
+      return null;
+    }
+  }
+  console.error(`[tag] ${content.id} (${content.title}): 재시도 한도 초과`);
+  return null;
+}
+
+/** Claude 응답에서 태그 객체 추출 */
+function parseResponse(content: NetflixContent, response: Anthropic.Message): Tags | null {
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      // 시스템 블록 둘 다 캐싱 → 모든 콘텐츠에서 동일 → cache hit 누적
-      system: [
-        { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
-        { type: 'text', text: TAG_CRITERIA, cache_control: { type: 'ephemeral' } },
-      ],
-      messages: [
-        { role: 'user', content: buildUserPrompt(content) },
-      ],
-    });
 
     // 응답에서 text 블록 추출
     const textBlock = response.content.find((b) => b.type === 'text');
@@ -156,26 +190,39 @@ async function tagOne(anthropic: Anthropic, content: NetflixContent): Promise<Ta
 
     return parsed;
   } catch (e) {
-    console.error(`[tag] ${content.id} (${content.title}): API 호출 실패`, e);
+    console.error(`[tag] ${content.id} (${content.title}): 응답 파싱 실패`, e);
     return null;
   }
 }
 
-// ── 동시 처리 (간단한 concurrency limit) ────────────────────────────────────────
+// ── 순차 처리 (Tier 1 rate limit 50 RPM 대응) ─────────────────────────────────
 
-const CONCURRENCY = 5;
+/** 한 번의 cron 실행에서 처리할 최대 콘텐츠 수.
+ *  Tier 1 무료 한도(50 RPM)와 Vercel maxDuration(300s)을 고려한 보수적 값.
+ *  처리 못한 콘텐츠는 다음 cron에서 자동으로 이어받음. */
+const MAX_PER_RUN = 40;
 
-async function processInBatches<T, R>(
+/** 호출 사이 최소 대기 시간 (ms). 50 RPM = 분당 50회 = 평균 1200ms 간격. */
+const MIN_INTERVAL_MS = 1500;
+
+async function processSequentially<T, R>(
   items: T[],
-  worker: (item: T) => Promise<R>,
-  concurrency: number
+  worker: (item: T) => Promise<R>
 ): Promise<R[]> {
   const results: R[] = [];
-  for (let i = 0; i < items.length; i += concurrency) {
-    const slice = items.slice(i, i + concurrency);
-    const batch = await Promise.all(slice.map((item) => worker(item)));
-    results.push(...batch);
-    console.log(`[tag] 진행: ${Math.min(i + concurrency, items.length)} / ${items.length}`);
+  for (let i = 0; i < items.length; i++) {
+    const start = Date.now();
+    const result = await worker(items[i]);
+    results.push(result);
+    if ((i + 1) % 5 === 0 || i === items.length - 1) {
+      console.log(`[tag] 진행: ${i + 1} / ${items.length}`);
+    }
+    // 다음 호출 전 최소 간격 확보 (rate limit 보호)
+    if (i < items.length - 1) {
+      const elapsed = Date.now() - start;
+      const wait = MIN_INTERVAL_MS - elapsed;
+      if (wait > 0) await sleep(wait);
+    }
   }
   return results;
 }
@@ -195,15 +242,19 @@ export async function tagAndStoreContents(contents: NetflixContent[]): Promise<{
   const anthropic = getAnthropic();
   const supabase = getSupabase();
 
-  const taggedRows = await processInBatches(
-    contents,
-    async (content) => {
-      const tags = await tagOne(anthropic, content);
-      if (!tags) return { content, tags: null };
-      return { content, tags };
-    },
-    CONCURRENCY
-  );
+  // 한 번에 처리할 콘텐츠 수 제한 (Tier 1 rate limit + Vercel timeout 보호)
+  const toProcess = contents.slice(0, MAX_PER_RUN);
+  if (contents.length > MAX_PER_RUN) {
+    console.log(
+      `[tag] ${contents.length}건 중 ${MAX_PER_RUN}건만 이번 실행에서 처리. 나머지는 다음 cron에서.`
+    );
+  }
+
+  const taggedRows = await processSequentially(toProcess, async (content) => {
+    const tags = await tagOne(anthropic, content);
+    if (!tags) return { content, tags: null };
+    return { content, tags };
+  });
 
   // upsert 데이터 준비 — 태깅 성공한 것만
   const upsertRows = taggedRows
@@ -233,8 +284,11 @@ export async function tagAndStoreContents(contents: NetflixContent[]): Promise<{
   }
 
   const tagged = upsertRows.length;
-  const failed = contents.length - tagged;
-  console.log(`[tag] 완료: 총 ${contents.length} / 성공 ${tagged} / 실패 ${failed}`);
+  const failed = toProcess.length - tagged;
+  const skipped = contents.length - toProcess.length;
+  console.log(
+    `[tag] 완료: 발견 ${contents.length} / 처리 ${toProcess.length} / 성공 ${tagged} / 실패 ${failed} / 미처리 ${skipped}`
+  );
   return { total: contents.length, tagged, failed };
 }
 
