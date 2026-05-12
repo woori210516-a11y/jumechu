@@ -441,7 +441,13 @@ export async function fetchNetflixNewContents(): Promise<NetflixContent[]> {
     fetchAllSeries(),
     loadExisting(supabase),
   ]);
-  const allFromApi = [...movies, ...series];
+  // 영화·시리즈를 번갈아 섞어서 cron 40개 처리 시 양쪽이 골고루 포함되도록 함
+  const allFromApi: typeof movies = [];
+  const maxLen = Math.max(movies.length, series.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (i < movies.length)  allFromApi.push(movies[i]);
+    if (i < series.length)  allFromApi.push(series[i]);
+  }
 
   const newOrChanged: NetflixContent[] = [];
   for (const item of allFromApi) {
