@@ -6,5 +6,5 @@ export default async function RoomPage({
   params: Promise<{ roomId: string }>;
 }) {
   const { roomId } = await params;
-  redirect(`/?room=${roomId}`);
+  redirect(`/menu?room=${roomId}`);
 }
