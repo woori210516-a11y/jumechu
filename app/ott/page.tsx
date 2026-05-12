@@ -14,7 +14,7 @@ type TagKey =
 
 type Desired = Partial<Record<TagKey, number>>;
 
-type StepId = 'q1' | 'q1_1' | 'q1_2' | 'q2' | 'q4' | 'q5' | 'q6' | 'q7' | 'q8';
+type StepId = 'q1' | 'q1_1' | 'q1_2' | 'q2' | 'q5' | 'q6' | 'q7' | 'q8';
 
 type View = 'intro' | 'quiz' | 'loading' | 'result' | 'no-result';
 
@@ -57,7 +57,7 @@ function computeActiveSteps(survey: SurveyState): StepId[] {
   if (notAny && ct.includes('drama'))  steps.push('q1_1', 'q1_2');
   if (notAny && ct.includes('movie'))  steps.push('q2');
 
-  steps.push('q4', 'q5', 'q6', 'q7', 'q8');
+  steps.push('q5', 'q6', 'q7', 'q8');
   return steps;
 }
 
@@ -101,25 +101,16 @@ const Q1_OPTIONS = [
   { label: '상관없음',    emoji: '🎲', value: 'any' },
 ];
 
-// ── Q4 선택지 ─────────────────────────────────────────────────────────────────
-
-const Q4_OPTIONS = [
-  { label: '힐링',        emoji: '🌿', value: 'healing',    desired: { healing: 9, lightness: 7 } as Desired },
-  { label: '자극',        emoji: '⚡️', value: 'tension',    desired: { tension: 8, laughter: 6 } as Desired },
-  { label: '멍때리기',    emoji: '🌀', value: 'zone_out',   desired: { background_watch: 9, lightness: 8, concentration: 2 } as Desired },
-  { label: '울고 싶음',   emoji: '😭', value: 'cry',        desired: { emotion: 9, romance: 5 } as Desired },
-  { label: '슬픈',        emoji: '😢', value: 'sad',        desired: { emotion: 8, lightness: 3 } as Desired },
-];
-
 // ── Q5 선택지 ─────────────────────────────────────────────────────────────────
 
 const Q5_OPTIONS = [
-  { label: '가볍게 웃을 수 있는',     emoji: '😂', desired: { laughter: 9, lightness: 8 } as Desired },
-  { label: '긴장감 넘치는',          emoji: '😰', desired: { tension: 9 } as Desired },
-  { label: '감동적인',               emoji: '🥺', desired: { emotion: 8, romance: 4 } as Desired },
-  { label: '무서운',                 emoji: '😱', desired: { horror: 8, tension: 5 } as Desired },
-  { label: '설레는',                 emoji: '💕', desired: { romance: 9, lightness: 6 } as Desired },
-  { label: '뭔가 생각하게 되는',     emoji: '🤔', desired: { concentration: 8 } as Desired },
+  { label: '가볍게 웃을 수 있는',  value: 'funny',   emoji: '😂', desired: { laughter: 9, lightness: 8 } as Desired },
+  { label: '긴장감 넘치는',       value: 'tension', emoji: '😰', desired: { tension: 9 } as Desired },
+  { label: '감동적인',            value: 'moving',  emoji: '🥺', desired: { emotion: 8, romance: 4 } as Desired },
+  { label: '무서운',              value: 'horror',  emoji: '😱', desired: { horror: 8, tension: 5 } as Desired },
+  { label: '설레는',              value: 'romance', emoji: '💕', desired: { romance: 9, lightness: 6 } as Desired },
+  { label: '생각하게 되는',       value: 'deep',    emoji: '🤔', desired: { concentration: 8 } as Desired },
+  { label: '슬픈',               value: 'sad',     emoji: '😢', desired: { emotion: 8, lightness: 3 } as Desired },
 ];
 
 // ── Q6 선택지 ─────────────────────────────────────────────────────────────────
@@ -166,8 +157,7 @@ export default function NetflixPage() {
     if (view !== 'quiz') return;
     if (currentStep === 'q1') {
       setMultiTemp(survey.contentTypes);
-    } else if (currentStep === 'q4') {
-      // desired 역매핑은 복잡하므로 항상 초기화
+    } else if (currentStep === 'q5') {
       setMultiTemp([]);
     } else if (currentStep === 'q8') {
       const a: string[] = [];
@@ -281,17 +271,14 @@ export default function NetflixPage() {
   function handleQ2(runtimeMin: number | null, runtimeMax: number | null) {
     advance({ ...survey, runtimeMin, runtimeMax });
   }
-  function handleQ4Confirm() {
+  function handleQ5Confirm() {
     if (multiTemp.length === 0) return;
     let merged: Desired = {};
     for (const val of multiTemp) {
-      const opt = Q4_OPTIONS.find(o => o.value === val);
+      const opt = Q5_OPTIONS.find(o => o.value === val);
       if (opt) merged = mergeDesired(merged, opt.desired);
     }
     advance({ ...survey, desired: mergeDesired(survey.desired, merged) });
-  }
-  function handleQ5(desired: Desired) {
-    advance({ ...survey, desired: mergeDesired(survey.desired, desired) });
   }
   function handleQ6(desired: Desired) {
     advance({ ...survey, desired: mergeDesired(survey.desired, desired) });
@@ -344,8 +331,7 @@ export default function NetflixPage() {
             onQ1_1={handleQ1_1}
             onQ1_2={handleQ1_2}
             onQ2={handleQ2}
-            onQ4Confirm={handleQ4Confirm}
-            onQ5={handleQ5}
+            onQ5Confirm={handleQ5Confirm}
             onQ6={handleQ6}
             onQ7={handleQ7}
             onQ8Confirm={handleQ8Confirm}
@@ -437,8 +423,7 @@ interface QuizStepViewProps {
   onQ1_1: (isEnded: boolean | null) => void;
   onQ1_2: (min: number | null, max: number | null) => void;
   onQ2: (min: number | null, max: number | null) => void;
-  onQ4Confirm: () => void;
-  onQ5: (d: Desired) => void;
+  onQ5Confirm: () => void;
   onQ6: (d: Desired) => void;
   onQ7: (d: Desired) => void;
   onQ8Confirm: () => void;
@@ -535,26 +520,15 @@ function QuizStepView(p: QuizStepViewProps) {
         />
       )}
 
-      {p.step === 'q4' && (
+      {p.step === 'q5' && (
         <MultiStep
-          title="지금 기분이 어때요?"
+          title="어떤 느낌이 보고 싶어요?"
           subTitle="복수 선택 가능해요"
-          options={Q4_OPTIONS}
+          options={Q5_OPTIONS}
           selected={p.multiTemp}
           exclusiveValues={[]}
           onChange={(v) => p.setMultiTemp(toggleMulti(p.multiTemp, v, []))}
-          onConfirm={p.onQ4Confirm}
-        />
-      )}
-
-      {p.step === 'q5' && (
-        <SingleStep
-          title="어떤 느낌이 보고 싶어요?"
-          options={Q5_OPTIONS.map(o => ({ label: o.label, emoji: o.emoji }))}
-          onSelect={(label) => {
-            const opt = Q5_OPTIONS.find(o => o.label === label)!;
-            p.onQ5(opt.desired);
-          }}
+          onConfirm={p.onQ5Confirm}
         />
       )}
 
