@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import CharacterImage from '@/app/components/CharacterImage';
 import ResultView from '@/app/components/ResultView';
@@ -14,7 +14,7 @@ import type { Answers, Concept, ScoredMenu } from '@/app/types';
 import { menus } from '@/app/lib/menus';
 import { useQuizState } from '@/app/lib/useQuizState';
 
-type View = 'intro' | 'quiz' | 'result' | 'group-people' | 'group-invite' | 'group-waiting' | 'room-error';
+type View = 'landing' | 'intro' | 'quiz' | 'result' | 'group-people' | 'group-invite' | 'group-waiting' | 'room-error';
 
 interface GroupState {
   roomId: string;
@@ -56,9 +56,10 @@ const CONCEPT_ORDER: Concept[] = ['boyfriend', 'mom', 'together'];
 
 function HomeContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const hasJoinedRef = useRef(false);
 
-  const [view, setView] = useState<View>('intro');
+  const [view, setView] = useState<View>('landing');
   const [concept, setConcept] = useState<Concept>('boyfriend');
   const {
     questionIndex, setQuestionIndex,
@@ -81,6 +82,7 @@ function HomeContent() {
     const roomId = searchParams.get('room');
     if (!roomId) return;
     hasJoinedRef.current = true;
+    // 공유 링크 접속 시 음식 퀴즈 모드로 진입
 
     // URL 정리 헬퍼 (done 방은 /room/<id> 유지, 그 외는 /)
     function cleanUrl(keepRoomUrl = false) {
@@ -282,7 +284,7 @@ function HomeContent() {
   }
 
   function restart() {
-    setView('intro');
+    setView('landing');
     resetQuiz();
     setResults([]);
     setIsDead(false);
@@ -311,6 +313,13 @@ function HomeContent() {
   return (
     <main className="min-h-screen flex justify-center items-start">
       <div className="w-full max-w-[390px] min-h-screen bg-white flex flex-col shadow-2xl shadow-rose-200/50">
+
+        {view === 'landing' && (
+          <LandingView
+            onFoodClick={() => setView('intro')}
+            onNetflixClick={() => router.push('/netflix')}
+          />
+        )}
 
         {view === 'intro' && (
           <IntroView concept={concept} onConceptChange={setConcept} onStart={startQuiz} />
@@ -381,6 +390,76 @@ export default function Page() {
     <Suspense fallback={<div className="min-h-screen bg-white" />}>
       <HomeContent />
     </Suspense>
+  );
+}
+
+// ── 랜딩 화면 ─────────────────────────────────────────────────────────────────────
+
+interface LandingViewProps {
+  onFoodClick: () => void;
+  onNetflixClick: () => void;
+}
+
+function LandingView({ onFoodClick, onNetflixClick }: LandingViewProps) {
+  return (
+    <div className="flex flex-col flex-1 animate-fade-slide">
+      {/* 헤더 */}
+      <div className="px-6 pt-10 pb-4 text-center">
+        <h1 className="text-2xl font-bold text-gray-900">오늘 뭐 할까?</h1>
+        <p className="mt-2 text-sm text-gray-400">골라봐</p>
+      </div>
+
+      {/* 선택 버튼 영역 */}
+      <div className="flex flex-col flex-1 items-center justify-center px-6 gap-4">
+        {/* 음식 버튼 */}
+        <button
+          onClick={onFoodClick}
+          className="w-full rounded-3xl overflow-hidden active:scale-[0.98] transition-transform shadow-lg"
+          style={{ background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)', border: '2px solid #fed7aa' }}
+        >
+          <div className="flex items-center gap-5 px-6 py-6">
+            <div
+              className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shrink-0 shadow-md"
+              style={{ background: '#fb923c' }}
+            >
+              🍜
+            </div>
+            <div className="text-left">
+              <p className="text-lg font-bold text-gray-900">음식 고르기</p>
+              <p className="text-sm text-gray-400 mt-0.5">오늘 뭐 먹을지 골라줄게</p>
+            </div>
+            <svg className="ml-auto text-orange-300" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </div>
+        </button>
+
+        {/* 넷플릭스 버튼 */}
+        <button
+          onClick={onNetflixClick}
+          className="w-full rounded-3xl overflow-hidden active:scale-[0.98] transition-transform shadow-lg"
+          style={{ background: 'linear-gradient(135deg, #1a0000 0%, #2d0000 100%)', border: '2px solid #7f1d1d' }}
+        >
+          <div className="flex items-center gap-5 px-6 py-6">
+            <div
+              className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shrink-0 shadow-md"
+              style={{ background: '#E50914' }}
+            >
+              🎬
+            </div>
+            <div className="text-left">
+              <p className="text-lg font-bold text-white">넷플릭스 고르기</p>
+              <p className="text-sm mt-0.5" style={{ color: '#9ca3af' }}>오늘 뭐 볼지 추천해줄게</p>
+            </div>
+            <svg className="ml-auto" style={{ color: '#E50914' }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </div>
+        </button>
+      </div>
+
+      <div className="pb-12" />
+    </div>
   );
 }
 
