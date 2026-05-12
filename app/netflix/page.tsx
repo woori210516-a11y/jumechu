@@ -14,7 +14,7 @@ type TagKey =
 
 type Desired = Partial<Record<TagKey, number>>;
 
-type StepId = 'q1' | 'q1_1' | 'q1_2' | 'q2' | 'q3' | 'q4' | 'q5' | 'q6' | 'q7' | 'q8';
+type StepId = 'q1' | 'q1_1' | 'q1_2' | 'q2' | 'q4' | 'q5' | 'q6' | 'q7' | 'q8';
 
 type View = 'intro' | 'quiz' | 'loading' | 'result' | 'no-result';
 
@@ -25,7 +25,6 @@ interface SurveyState {
   episodeMax: number | null;
   runtimeMin: number | null;
   runtimeMax: number | null;
-  countries: string[];        // 'KR'|'US'|'EU'|'JP'|'CN'|'ASIA'|'any'
   desired: Desired;
   avoidViolence: boolean;
   avoidAdult: boolean;
@@ -40,7 +39,6 @@ const INITIAL_SURVEY: SurveyState = {
   episodeMax: null,
   runtimeMin: null,
   runtimeMax: null,
-  countries: [],
   desired: {},
   avoidViolence: false,
   avoidAdult: false,
@@ -48,16 +46,6 @@ const INITIAL_SURVEY: SurveyState = {
   avoidSad: false,
 };
 
-// ── 국가 코드 매핑 ────────────────────────────────────────────────────────────
-
-const COUNTRY_CODES: Record<string, string[]> = {
-  KR:   ['KR'],
-  US:   ['US', 'CA', 'GB'],
-  EU:   ['DE', 'FR', 'IT', 'ES', 'SE', 'NO', 'DK', 'NL'],
-  JP:   ['JP'],
-  CN:   ['CN', 'TW', 'HK'],
-  ASIA: ['TH', 'IN', 'PH', 'SG', 'ID'],
-};
 
 // ── 스텝 흐름 계산 ────────────────────────────────────────────────────────────
 
@@ -69,7 +57,7 @@ function computeActiveSteps(survey: SurveyState): StepId[] {
   if (notAny && ct.includes('drama'))  steps.push('q1_1', 'q1_2');
   if (notAny && ct.includes('movie'))  steps.push('q2');
 
-  steps.push('q3', 'q4', 'q5', 'q6', 'q7', 'q8');
+  steps.push('q4', 'q5', 'q6', 'q7', 'q8');
   return steps;
 }
 
@@ -113,25 +101,14 @@ const Q1_OPTIONS = [
   { label: '상관없음',    emoji: '🎲', value: 'any' },
 ];
 
-// ── Q3 선택지 ─────────────────────────────────────────────────────────────────
-
-const Q3_OPTIONS = [
-  { label: '한국',        emoji: '🇰🇷', value: 'KR' },
-  { label: '헐리웃',      emoji: '🎬', value: 'US' },
-  { label: '유럽',        emoji: '🌍', value: 'EU' },
-  { label: '일본',        emoji: '🗾', value: 'JP' },
-  { label: '중국',        emoji: '🇨🇳', value: 'CN' },
-  { label: '기타 아시아', emoji: '🌏', value: 'ASIA' },
-  { label: '상관없음',    emoji: '🌐', value: 'any' },
-];
-
 // ── Q4 선택지 ─────────────────────────────────────────────────────────────────
 
 const Q4_OPTIONS = [
-  { label: '힐링이 필요해',       emoji: '🌿', desired: { healing: 9, lightness: 7 } as Desired },
-  { label: '자극이 필요해',       emoji: '⚡️', desired: { tension: 8, laughter: 6 } as Desired },
-  { label: '그냥 멍때리고 싶어',  emoji: '🌀', desired: { background_watch: 9, lightness: 8, concentration: 2 } as Desired },
-  { label: '울고 싶은 기분',      emoji: '😭', desired: { emotion: 9, romance: 5 } as Desired },
+  { label: '힐링',        emoji: '🌿', value: 'healing',    desired: { healing: 9, lightness: 7 } as Desired },
+  { label: '자극',        emoji: '⚡️', value: 'tension',    desired: { tension: 8, laughter: 6 } as Desired },
+  { label: '멍때리기',    emoji: '🌀', value: 'zone_out',   desired: { background_watch: 9, lightness: 8, concentration: 2 } as Desired },
+  { label: '울고 싶음',   emoji: '😭', value: 'cry',        desired: { emotion: 9, romance: 5 } as Desired },
+  { label: '슬픈',        emoji: '😢', value: 'sad',        desired: { emotion: 8, lightness: 3 } as Desired },
 ];
 
 // ── Q5 선택지 ─────────────────────────────────────────────────────────────────
@@ -184,13 +161,14 @@ export default function NetflixPage() {
   const [error,        setError]        = useState<string | null>(null);
   const [hiddenIds,    setHiddenIds]    = useState<Set<string>>(new Set());
 
-  // 멀티셀렉트 스텝 진입 시 기존 값으로 초기화 (뒤로가기 지원)
+  // 멀티셀렉트 스텝 진입 시 초기화 (뒤로가기 지원)
   useEffect(() => {
     if (view !== 'quiz') return;
     if (currentStep === 'q1') {
       setMultiTemp(survey.contentTypes);
-    } else if (currentStep === 'q3') {
-      setMultiTemp(survey.countries);
+    } else if (currentStep === 'q4') {
+      // desired 역매핑은 복잡하므로 항상 초기화
+      setMultiTemp([]);
     } else if (currentStep === 'q8') {
       const a: string[] = [];
       if (survey.avoidViolence) a.push('violence');
@@ -254,11 +232,6 @@ export default function NetflixPage() {
       const contentTypes =
         s.contentTypes.length === 0 || s.contentTypes.includes('any') ? null : s.contentTypes;
 
-      const countryCodes =
-        s.countries.length === 0 || s.countries.includes('any')
-          ? null
-          : s.countries.flatMap(g => COUNTRY_CODES[g] ?? []);
-
       const res = await fetch('/api/netflix/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -269,7 +242,6 @@ export default function NetflixPage() {
           episodeMax: s.episodeMax,
           runtimeMin: s.runtimeMin,
           runtimeMax: s.runtimeMax,
-          countryCodes,
           desired: s.desired,
           avoidViolence: s.avoidViolence,
           avoidAdult: s.avoidAdult,
@@ -309,8 +281,14 @@ export default function NetflixPage() {
   function handleQ2(runtimeMin: number | null, runtimeMax: number | null) {
     advance({ ...survey, runtimeMin, runtimeMax });
   }
-  function handleQ4(desired: Desired) {
-    advance({ ...survey, desired: mergeDesired(survey.desired, desired) });
+  function handleQ4Confirm() {
+    if (multiTemp.length === 0) return;
+    let merged: Desired = {};
+    for (const val of multiTemp) {
+      const opt = Q4_OPTIONS.find(o => o.value === val);
+      if (opt) merged = mergeDesired(merged, opt.desired);
+    }
+    advance({ ...survey, desired: mergeDesired(survey.desired, merged) });
   }
   function handleQ5(desired: Desired) {
     advance({ ...survey, desired: mergeDesired(survey.desired, desired) });
@@ -327,10 +305,6 @@ export default function NetflixPage() {
   function handleQ1Confirm() {
     if (multiTemp.length === 0) return;
     advance({ ...survey, contentTypes: multiTemp });
-  }
-  function handleQ3Confirm() {
-    if (multiTemp.length === 0) return;
-    advance({ ...survey, countries: multiTemp });
   }
   function handleQ8Confirm() {
     if (multiTemp.length === 0) return;
@@ -370,8 +344,7 @@ export default function NetflixPage() {
             onQ1_1={handleQ1_1}
             onQ1_2={handleQ1_2}
             onQ2={handleQ2}
-            onQ3Confirm={handleQ3Confirm}
-            onQ4={handleQ4}
+            onQ4Confirm={handleQ4Confirm}
             onQ5={handleQ5}
             onQ6={handleQ6}
             onQ7={handleQ7}
@@ -418,10 +391,7 @@ function IntroView({ onStart }: { onStart: () => void }) {
 
       <div className="flex flex-col flex-1 items-center justify-center px-6 gap-10">
         <div className="flex flex-col items-center gap-8">
-          <div className="flex flex-col items-center gap-2">
-            <div className="text-5xl font-bold tracking-tight" style={{ color: '#E50914' }}>넷플</div>
-            <div className="text-lg font-medium" style={{ color: '#888' }}>추천기</div>
-          </div>
+          <div className="text-5xl font-bold tracking-tight" style={{ color: '#E50914' }}>넷플</div>
           <div className="text-center flex flex-col gap-3">
             <h1 className="text-2xl font-bold leading-tight" style={{ color: '#fff' }}>
               오늘 뭐볼까?<br />넷플에서 골라봐
@@ -467,8 +437,7 @@ interface QuizStepViewProps {
   onQ1_1: (isEnded: boolean | null) => void;
   onQ1_2: (min: number | null, max: number | null) => void;
   onQ2: (min: number | null, max: number | null) => void;
-  onQ3Confirm: () => void;
-  onQ4: (d: Desired) => void;
+  onQ4Confirm: () => void;
   onQ5: (d: Desired) => void;
   onQ6: (d: Desired) => void;
   onQ7: (d: Desired) => void;
@@ -566,26 +535,15 @@ function QuizStepView(p: QuizStepViewProps) {
         />
       )}
 
-      {p.step === 'q3' && (
-        <MultiStep
-          title="어느 나라 콘텐츠?"
-          subTitle="복수 선택 가능해요"
-          options={Q3_OPTIONS}
-          selected={p.multiTemp}
-          exclusiveValues={['any']}
-          onChange={(v) => p.setMultiTemp(toggleMulti(p.multiTemp, v, ['any']))}
-          onConfirm={p.onQ3Confirm}
-        />
-      )}
-
       {p.step === 'q4' && (
-        <SingleStep
-          title="지금 멘탈 상태가 어때요?"
-          options={Q4_OPTIONS.map(o => ({ label: o.label, emoji: o.emoji }))}
-          onSelect={(label) => {
-            const opt = Q4_OPTIONS.find(o => o.label === label)!;
-            p.onQ4(opt.desired);
-          }}
+        <MultiStep
+          title="지금 기분이 어때요?"
+          subTitle="복수 선택 가능해요"
+          options={Q4_OPTIONS}
+          selected={p.multiTemp}
+          exclusiveValues={[]}
+          onChange={(v) => p.setMultiTemp(toggleMulti(p.multiTemp, v, []))}
+          onConfirm={p.onQ4Confirm}
         />
       )}
 
