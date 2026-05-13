@@ -14,7 +14,7 @@ type TagKey =
 
 type Desired = Partial<Record<TagKey, number>>;
 
-type StepId = 'q1' | 'q1_1' | 'q1_2' | 'q2' | 'q5' | 'q6' | 'q7' | 'q8';
+type StepId = 'q1' | 'q1_1' | 'q1_2' | 'q2' | 'q3' | 'q5' | 'q6' | 'q7' | 'q8';
 
 type View = 'intro' | 'quiz' | 'loading' | 'result' | 'no-result';
 
@@ -25,6 +25,7 @@ interface SurveyState {
   episodeMax: number | null;
   runtimeMin: number | null;
   runtimeMax: number | null;
+  countries: string[];        // 국가 그룹 선택: 'kr'|'jp'|'cn'|'eu'|'us'|'other'|'any'
   desired: Desired;
   avoidViolence: boolean;
   avoidAdult: boolean;
@@ -39,6 +40,7 @@ const INITIAL_SURVEY: SurveyState = {
   episodeMax: null,
   runtimeMin: null,
   runtimeMax: null,
+  countries: [],
   desired: {},
   avoidViolence: false,
   avoidAdult: false,
@@ -57,7 +59,7 @@ function computeActiveSteps(survey: SurveyState): StepId[] {
   if (notAny && ct.includes('drama'))  steps.push('q1_1', 'q1_2');
   if (notAny && ct.includes('movie'))  steps.push('q2');
 
-  steps.push('q5', 'q6', 'q7', 'q8');
+  steps.push('q3', 'q5', 'q6', 'q7', 'q8');
   return steps;
 }
 
@@ -100,6 +102,28 @@ const Q1_OPTIONS = [
   { label: '예능',        emoji: '🎭', value: 'variety' },
   { label: '상관없음',    emoji: '🎲', value: 'any' },
 ];
+
+// ── Q3 선택지 (국가) ──────────────────────────────────────────────────────────
+
+const Q3_OPTIONS = [
+  { label: '한국',    emoji: '🇰🇷', value: 'kr' },
+  { label: '일본',    emoji: '🇯🇵', value: 'jp' },
+  { label: '중국',    emoji: '🇨🇳', value: 'cn' },
+  { label: '유럽',    emoji: '🇪🇺', value: 'eu' },
+  { label: '헐리웃',  emoji: '🎬', value: 'us' },
+  { label: '기타',    emoji: '🌏', value: 'other' },
+  { label: '상관없음', emoji: '🎲', value: 'any' },
+];
+
+// 국가 그룹 → ISO 코드 매핑
+const COUNTRY_CODES: Record<string, string[]> = {
+  kr:    ['KR'],
+  jp:    ['JP'],
+  cn:    ['CN', 'TW', 'HK'],
+  eu:    ['DE', 'FR', 'IT', 'ES', 'SE', 'NO', 'DK', 'NL', 'PL', 'FI', 'BE', 'AT', 'CH'],
+  us:    ['US', 'GB', 'CA', 'AU'],
+  other: ['TH', 'IN', 'PH', 'SG', 'ID', 'VN', 'MY', 'TR', 'MX', 'AR', 'BR', 'RU'],
+};
 
 // ── Q5 선택지 ─────────────────────────────────────────────────────────────────
 
@@ -157,6 +181,8 @@ export default function NetflixPage() {
     if (view !== 'quiz') return;
     if (currentStep === 'q1') {
       setMultiTemp(survey.contentTypes);
+    } else if (currentStep === 'q3') {
+      setMultiTemp(survey.countries);
     } else if (currentStep === 'q5') {
       setMultiTemp([]);
     } else if (currentStep === 'q8') {
@@ -222,6 +248,11 @@ export default function NetflixPage() {
       const contentTypes =
         s.contentTypes.length === 0 || s.contentTypes.includes('any') ? null : s.contentTypes;
 
+      const countryCodes: string[] | null =
+        s.countries.length === 0 || s.countries.includes('any')
+          ? null
+          : s.countries.flatMap(g => COUNTRY_CODES[g] ?? []);
+
       const res = await fetch('/api/netflix/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -232,6 +263,7 @@ export default function NetflixPage() {
           episodeMax: s.episodeMax,
           runtimeMin: s.runtimeMin,
           runtimeMax: s.runtimeMax,
+          countryCodes,
           desired: s.desired,
           avoidViolence: s.avoidViolence,
           avoidAdult: s.avoidAdult,
@@ -293,6 +325,10 @@ export default function NetflixPage() {
     if (multiTemp.length === 0) return;
     advance({ ...survey, contentTypes: multiTemp });
   }
+  function handleQ3Confirm() {
+    if (multiTemp.length === 0) return;
+    advance({ ...survey, countries: multiTemp });
+  }
   function handleQ8Confirm() {
     if (multiTemp.length === 0) return;
     const isNone = multiTemp.includes('none');
@@ -331,6 +367,7 @@ export default function NetflixPage() {
             onQ1_1={handleQ1_1}
             onQ1_2={handleQ1_2}
             onQ2={handleQ2}
+            onQ3Confirm={handleQ3Confirm}
             onQ5Confirm={handleQ5Confirm}
             onQ6={handleQ6}
             onQ7={handleQ7}
@@ -423,6 +460,7 @@ interface QuizStepViewProps {
   onQ1_1: (isEnded: boolean | null) => void;
   onQ1_2: (min: number | null, max: number | null) => void;
   onQ2: (min: number | null, max: number | null) => void;
+  onQ3Confirm: () => void;
   onQ5Confirm: () => void;
   onQ6: (d: Desired) => void;
   onQ7: (d: Desired) => void;
@@ -517,6 +555,18 @@ function QuizStepView(p: QuizStepViewProps) {
             else if (label === '2시간 이상') p.onQ2(120, null);
             else                             p.onQ2(null, null);
           }}
+        />
+      )}
+
+      {p.step === 'q3' && (
+        <MultiStep
+          title="어느 나라 콘텐츠가 좋아요?"
+          subTitle="복수 선택 가능해요"
+          options={Q3_OPTIONS}
+          selected={p.multiTemp}
+          exclusiveValues={['any']}
+          onChange={(v) => p.setMultiTemp(toggleMulti(p.multiTemp, v, ['any']))}
+          onConfirm={p.onQ3Confirm}
         />
       )}
 
