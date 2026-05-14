@@ -72,7 +72,7 @@ function MenuContent() {
         }
 
         if (room.expires_at && new Date(room.expires_at) < new Date()) {
-          showRoomError('방이 만료됐어요 😢', '30분이 지나 방이 사라졌어요');
+          showRoomError('방이 만료됐어요', '30분이 지나 방이 사라졌어요');
           return;
         }
 
@@ -267,7 +267,7 @@ function MenuContent() {
 
   return (
     <main className="min-h-screen flex justify-center items-start">
-      <div className="w-full max-w-[390px] min-h-screen bg-white flex flex-col shadow-2xl shadow-rose-200/50">
+      <div className="w-full max-w-[430px] min-h-screen bg-white flex flex-col">
 
         {view === 'intro' && (
           <IntroView onSolo={startSolo} onTogether={startTogether} />
@@ -346,15 +346,19 @@ function RoomErrorView({ title, sub, onBack }: { title: string; sub: string; onB
   return (
     <div className="flex flex-col flex-1 items-center justify-center px-6 gap-8 animate-fade-slide">
       <div className="flex flex-col items-center gap-5">
-        <Image src="/hungry.png" alt="오류" width={200} height={200} className="object-contain" priority />
+        <Image src="/hungry.png" alt="오류" width={180} height={180} className="object-contain" priority />
         <div className="text-center">
-          <p className="text-xl font-bold text-gray-800">{title}</p>
-          <p className="mt-2 text-gray-400 text-sm leading-relaxed">{sub}</p>
+          <p style={{ fontSize: 18, fontWeight: 800, color: '#1a1a1a' }}>{title}</p>
+          <p style={{ marginTop: 6, fontSize: 13, color: '#999', lineHeight: 1.5 }}>{sub}</p>
         </div>
       </div>
       <button
         onClick={onBack}
-        className="w-full py-4 rounded-2xl bg-orange-400 text-white font-bold text-base shadow-lg shadow-orange-100 active:scale-95 transition-transform"
+        style={{
+          width: '100%', padding: '14px', borderRadius: 10,
+          background: '#FF5C00', color: '#fff', fontSize: 13, fontWeight: 800,
+          border: 'none', cursor: 'pointer',
+        }}
       >
         처음으로
       </button>
@@ -366,13 +370,13 @@ function RoomErrorView({ title, sub, onBack }: { title: string; sub: string; onB
 
 function IntroView({ onSolo, onTogether }: { onSolo: () => void; onTogether: () => void }) {
   return (
-    <div className="flex flex-col flex-1 animate-fade-slide">
-      <div className="px-5 pt-5">
+    <div className="flex flex-col flex-1 animate-fade-slide" style={{ background: '#fff' }}>
+      <div style={{ padding: '20px 20px 0' }}>
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-sm text-gray-400 font-medium active:scale-95 transition-all"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#999', textDecoration: 'none' }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 18l-6-6 6-6" />
           </svg>
           처음으로
@@ -380,35 +384,43 @@ function IntroView({ onSolo, onTogether }: { onSolo: () => void; onTogether: () 
       </div>
 
       <div className="flex flex-col flex-1 items-center justify-center px-6 gap-10">
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-5">
           <Image
             src="/group-main.png"
             alt="음식고르기"
-            width={180}
-            height={180}
+            width={160}
+            height={160}
             className="object-contain"
             priority
           />
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 leading-tight">오늘 뭐 먹지?</h1>
-            <p className="mt-2 text-gray-400 text-sm">혼자 고를지, 같이 고를지 선택해봐</p>
+            <h1 style={{ fontSize: 24, fontWeight: 900, color: '#1a1a1a', lineHeight: 1.2, margin: 0 }}>오늘 뭐 먹지?</h1>
+            <p style={{ marginTop: 8, fontSize: 13, color: '#999' }}>혼자 고를지, 같이 고를지 선택해봐</p>
           </div>
         </div>
 
-        <div className="w-full flex flex-col gap-3">
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button
             onClick={onSolo}
-            className="w-full py-4 rounded-2xl bg-orange-400 text-white text-base font-bold tracking-wide shadow-lg shadow-orange-200 active:scale-95 transition-transform"
+            style={{
+              width: '100%', padding: '14px', borderRadius: 10,
+              background: '#FF5C00', color: '#fff', fontSize: 13, fontWeight: 800,
+              border: 'none', cursor: 'pointer', transition: 'all 150ms',
+            }}
           >
             혼자 고르기
           </button>
           <button
             onClick={onTogether}
-            className="w-full py-4 rounded-2xl bg-white border-2 border-orange-200 text-orange-400 text-base font-bold active:scale-95 hover:bg-orange-50 transition-all"
+            style={{
+              width: '100%', padding: '14px', borderRadius: 10,
+              background: '#fff', color: '#FF5C00', fontSize: 13, fontWeight: 800,
+              border: '1.5px solid #FF5C00', cursor: 'pointer', transition: 'all 150ms',
+            }}
           >
             같이 고르기
           </button>
-          <p className="text-center text-xs text-gray-300">총 10여 가지 질문 · 1분 이내</p>
+          <p style={{ textAlign: 'center', fontSize: 11, color: '#999', marginTop: 2 }}>총 10여 가지 질문 · 1분 이내</p>
         </div>
       </div>
     </div>
@@ -428,92 +440,100 @@ interface QuizViewProps {
   onBack: () => void;
 }
 
-function QuizView({
-  question,
-  questionNumber,
-  total,
-  multiSelect,
-  onSingleAnswer,
-  onToggleMulti,
-  onMultiConfirm,
-  onBack,
-}: QuizViewProps) {
+function QuizView({ question, questionNumber, total, multiSelect, onSingleAnswer, onToggleMulti, onMultiConfirm, onBack }: QuizViewProps) {
   const progress = (questionNumber / total) * 100;
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col px-5 pt-5 gap-5 animate-fade-slide">
-      <div className="flex items-center justify-between shrink-0">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-1.5 text-sm text-gray-400 font-medium active:scale-95 transition-all"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-          이전
-        </button>
-        <span className="text-xs font-semibold text-gray-400 tracking-widest">
-          {questionNumber} / {total}
-        </span>
-        <div className="w-10" />
-      </div>
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#fff' }} className="animate-fade-slide">
 
-      <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden shrink-0">
-        <div
-          className="h-full bg-orange-400 rounded-full transition-all duration-500 ease-out"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-
-      <div className="flex items-start gap-3 pt-1 shrink-0">
-        <Image src="/group-quiz.png" alt="캐릭터" width={40} height={40} className="shrink-0 mt-1 rounded-full object-cover" />
-        <div className="flex-1 bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm border border-gray-100">
-          <p className="text-base font-bold text-gray-800 leading-snug">{question.text}</p>
-          {question.subText && (
-            <p className="mt-1 text-xs text-gray-400">{question.subText}</p>
-          )}
+      {/* 오렌지 헤더 */}
+      <div style={{ background: '#FF5C00', padding: '20px 20px 22px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <button
+            onClick={onBack}
+            style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'rgba(255,255,255,0.8)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+            이전
+          </button>
+          <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.5px' }}>Q{questionNumber} / {total}</span>
         </div>
+
+        {/* 프로그레스바 */}
+        <div style={{ height: 2, background: 'rgba(255,255,255,0.25)', borderRadius: 2, marginBottom: 16 }}>
+          <div style={{ height: '100%', width: `${progress}%`, background: '#fff', borderRadius: 2, transition: 'width 0.5s ease-out' }} />
+        </div>
+
+        {/* 질문 */}
+        <h2 style={{ fontSize: 18, fontWeight: 900, color: '#fff', lineHeight: 1.2, margin: 0 }}>{question.text}</h2>
+        {question.subText && (
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 5, marginBottom: 0 }}>{question.subText}</p>
+        )}
       </div>
 
+      {/* 선택지 영역 */}
       {question.type === 'single' ? (
-        <div className="overflow-y-auto flex-1 min-h-0 pb-6">
-          <div className="flex flex-col gap-2.5">
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 32px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {question.options.map((option) => (
               <button
                 key={option}
                 onClick={() => onSingleAnswer(option)}
-                className="w-full py-3.5 px-5 rounded-2xl bg-white border border-gray-200 text-gray-700 font-medium text-base text-left active:scale-[0.98] active:bg-orange-50 hover:border-orange-300 transition-all shadow-sm"
+                style={{
+                  width: '100%', padding: '11px 14px', borderRadius: 10,
+                  border: '1.5px solid #ebebeb', background: '#fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  cursor: 'pointer', transition: 'all 150ms', textAlign: 'left',
+                }}
               >
-                {option}
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#222' }}>{option}</span>
+                <div style={{ width: 18, height: 18, borderRadius: '50%', border: '1.5px solid #ddd', flexShrink: 0 }} />
               </button>
             ))}
           </div>
         </div>
       ) : (
-        <div className="overflow-y-auto flex-1 min-h-0">
-          <div className="grid grid-cols-2 gap-2.5 pb-4">
+        <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '16px 20px 0' }}>
             {question.options.map((option) => {
-              const selected = multiSelect.includes(option);
+              const sel = multiSelect.includes(option);
               return (
                 <button
                   key={option}
                   onClick={() => onToggleMulti(option)}
-                  className={`py-3 px-4 rounded-2xl border font-medium text-sm transition-all active:scale-95 ${
-                    selected
-                      ? 'border-orange-400 bg-orange-400 text-white shadow-md shadow-orange-100'
-                      : 'border-gray-200 bg-white text-gray-700 hover:border-orange-300 shadow-sm'
-                  }`}
+                  style={{
+                    padding: '11px 14px', borderRadius: 10,
+                    border: `1.5px solid ${sel ? '#FF5C00' : '#ebebeb'}`,
+                    background: sel ? '#fff8f5' : '#fff',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    cursor: 'pointer', transition: 'all 150ms', textAlign: 'left',
+                  }}
                 >
-                  {option}
+                  <span style={{ fontSize: 13, fontWeight: 600, color: sel ? '#FF5C00' : '#222', flex: 1 }}>{option}</span>
+                  <div style={{
+                    width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+                    background: sel ? '#FF5C00' : 'transparent',
+                    border: sel ? 'none' : '1.5px solid #ddd',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {sel && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700, lineHeight: 1 }}>✓</span>}
+                  </div>
                 </button>
               );
             })}
           </div>
-          <div style={{ position: 'sticky', bottom: 0, paddingBottom: 24, background: 'white' }}>
+          <div style={{ position: 'sticky', bottom: 0, padding: '12px 20px 24px', background: '#fff' }}>
             <button
               onClick={onMultiConfirm}
               disabled={multiSelect.length === 0}
-              className="w-full py-4 rounded-2xl bg-orange-400 text-white font-bold text-base shadow-lg shadow-orange-100 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-transform"
+              style={{
+                width: '100%', padding: '14px', borderRadius: 10,
+                background: '#FF5C00', color: '#fff', fontSize: 13, fontWeight: 800,
+                border: 'none', cursor: 'pointer',
+                opacity: multiSelect.length === 0 ? 0.4 : 1, transition: 'opacity 150ms',
+              }}
             >
               선택 완료
             </button>

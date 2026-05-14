@@ -32,13 +32,13 @@ type StepId = 'q1' | 'q1_1' | 'q1_2' | 'q2' | 'q3' | 'q5' | 'q6' | 'q7' | 'q8';
 type View = 'intro' | 'quiz' | 'loading' | 'result' | 'no-result';
 
 interface SurveyState {
-  contentTypes: string[];     // 'movie'|'drama'|'animation'|'documentary'|'variety'|'any'
+  contentTypes: string[];
   isEnded: boolean | null;
   episodeMin: number | null;
   episodeMax: number | null;
   runtimeMin: number | null;
   runtimeMax: number | null;
-  countries: string[];        // 국가 그룹 선택: 'kr'|'jp'|'cn'|'eu'|'us'|'other'|'any'
+  countries: string[];
   desired: Desired;
   avoidViolence: boolean;
   avoidAdult: boolean;
@@ -60,7 +60,6 @@ const INITIAL_SURVEY: SurveyState = {
   avoidHorror: false,
   avoidSad: false,
 };
-
 
 // ── 스텝 흐름 계산 ────────────────────────────────────────────────────────────
 
@@ -94,18 +93,14 @@ function mergeDesired(base: Desired, add: Desired): Desired {
 
 // ── 멀티셀렉트 exclusive 토글 ──────────────────────────────────────────────────
 
-function toggleMulti(
-  prev: string[],
-  value: string,
-  exclusiveValues: string[]
-): string[] {
+function toggleMulti(prev: string[], value: string, exclusiveValues: string[]): string[] {
   if (exclusiveValues.includes(value)) return [value];
   const withoutExclusive = prev.filter(v => !exclusiveValues.includes(v));
   if (withoutExclusive.includes(value)) return withoutExclusive.filter(v => v !== value);
   return [...withoutExclusive, value];
 }
 
-// ── Q1 선택지 ─────────────────────────────────────────────────────────────────
+// ── 선택지 데이터 ─────────────────────────────────────────────────────────────
 
 const Q1_OPTIONS = [
   { label: '영화',        emoji: '🎬', value: 'movie' },
@@ -115,8 +110,6 @@ const Q1_OPTIONS = [
   { label: '예능',        emoji: '🎭', value: 'variety' },
   { label: '상관없음',    emoji: '🎲', value: 'any' },
 ];
-
-// ── Q3 선택지 (국가) ──────────────────────────────────────────────────────────
 
 const Q3_OPTIONS = [
   { label: '한국',    emoji: '🇰🇷', value: 'kr' },
@@ -128,7 +121,6 @@ const Q3_OPTIONS = [
   { label: '상관없음', emoji: '🎲', value: 'any' },
 ];
 
-// 국가 그룹 → ISO 코드 매핑
 const COUNTRY_CODES: Record<string, string[]> = {
   kr:    ['KR'],
   jp:    ['JP'],
@@ -137,8 +129,6 @@ const COUNTRY_CODES: Record<string, string[]> = {
   us:    ['US', 'GB', 'CA', 'AU'],
   other: ['TH', 'IN', 'PH', 'SG', 'ID', 'VN', 'MY', 'TR', 'MX', 'AR', 'BR', 'RU'],
 };
-
-// ── Q5 선택지 ─────────────────────────────────────────────────────────────────
 
 const Q5_OPTIONS = [
   { label: '가볍게 웃을 수 있는',  value: 'funny',   emoji: '😂', desired: { laughter: 9, lightness: 8 } as Desired },
@@ -150,15 +140,11 @@ const Q5_OPTIONS = [
   { label: '슬픈',               value: 'sad',     emoji: '😢', desired: { emotion: 8, lightness: 3 } as Desired },
 ];
 
-// ── Q6 선택지 ─────────────────────────────────────────────────────────────────
-
 const Q6_OPTIONS = [
   { label: '자막 집중해서 볼거야',   emoji: '🎯', desired: { concentration: 8, background_watch: 2 } as Desired },
   { label: '그냥 틀어만 놓을거야',   emoji: '📱', desired: { background_watch: 8, concentration: 2 } as Desired },
   { label: '중간 정도',             emoji: '😌', desired: { concentration: 5, background_watch: 5 } as Desired },
 ];
-
-// ── Q7 선택지 ─────────────────────────────────────────────────────────────────
 
 const Q7_OPTIONS = [
   { label: '혼자',    emoji: '🎧', desired: { solo: 10 } as Desired },
@@ -167,8 +153,6 @@ const Q7_OPTIONS = [
   { label: '친구랑',  emoji: '🍿', desired: { with_friend: 10 } as Desired },
 ];
 
-// ── Q8 선택지 ─────────────────────────────────────────────────────────────────
-
 const Q8_OPTIONS = [
   { label: '폭력적인 장면', emoji: '🔪', value: 'violence' },
   { label: '성인 콘텐츠',   emoji: '🔞', value: 'adult'   },
@@ -176,6 +160,19 @@ const Q8_OPTIONS = [
   { label: '너무 슬픈 거',  emoji: '😢', value: 'sad'     },
   { label: '없음',          emoji: '✅', value: 'none'    },
 ];
+
+// 스텝별 질문 텍스트
+const STEP_META: Record<StepId, { title: string; sub?: string }> = {
+  q1:   { title: '오늘 뭐 보고 싶어요?',       sub: '복수 선택 가능해요' },
+  q1_1: { title: '완결난 드라마가 좋아요?' },
+  q1_2: { title: '몇 편 정도 볼 수 있어요?' },
+  q2:   { title: '얼마나 볼 수 있어요?' },
+  q3:   { title: '어느 나라 콘텐츠가 좋아요?',  sub: '복수 선택 가능해요' },
+  q5:   { title: '어떤 느낌이 보고 싶어요?',    sub: '복수 선택 가능해요' },
+  q6:   { title: '얼마나 집중할 수 있어요?' },
+  q7:   { title: '누구랑 봐요?' },
+  q8:   { title: '피하고 싶은 게 있어요?',     sub: '복수 선택 가능해요' },
+};
 
 // ── 메인 페이지 ────────────────────────────────────────────────────────────────
 
@@ -192,14 +189,12 @@ export default function NetflixPage() {
 
   // ── iOS 네이티브 브리지 ──────────────────────────────────────────────────────
   useEffect(() => {
-    // 네이티브에서 저장된 "본 목록" 주입
     window.__setWatchedIds = (ids: string[]) => {
       setNativeWatchedIds(new Set(ids));
     };
     return () => { delete window.__setWatchedIds; };
   }, []);
 
-  // 멀티셀렉트 스텝 진입 시 초기화 (뒤로가기 지원)
   useEffect(() => {
     if (view !== 'quiz') return;
     if (currentStep === 'q1') {
@@ -219,8 +214,6 @@ export default function NetflixPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, view]);
 
-  // ── 상태 초기화 ─────────────────────────────────────────────────────────────
-
   function resetAll() {
     setView('intro');
     setCurrentStep('q1');
@@ -230,15 +223,13 @@ export default function NetflixPage() {
     setResults([]);
     setError(null);
     setHiddenIds(new Set());
-    window.__nativeUIState?.('survey'); // 인트로도 /ott 페이지이므로 survey 상태
+    window.__nativeUIState?.('survey');
   }
 
   function handleStart() {
     resetAll();
     setView('quiz');
   }
-
-  // ── 뒤로가기 ────────────────────────────────────────────────────────────────
 
   function handleBack() {
     if (stepHistory.length === 0) {
@@ -251,8 +242,6 @@ export default function NetflixPage() {
     setSurvey(prev.survey);
   }
 
-  // ── 공통: 다음 스텝으로 진행 ────────────────────────────────────────────────
-
   function advance(newSurvey: SurveyState) {
     const next = getNextStep(currentStep, newSurvey);
     setStepHistory(h => [...h, { step: currentStep, survey }]);
@@ -263,8 +252,6 @@ export default function NetflixPage() {
       setCurrentStep(next);
     }
   }
-
-  // ── API 호출 ─────────────────────────────────────────────────────────────────
 
   async function submitSurvey(s: SurveyState) {
     setView('loading');
@@ -318,17 +305,9 @@ export default function NetflixPage() {
     }
   }
 
-  // ── 단일 선택 핸들러 ─────────────────────────────────────────────────────────
-
-  function handleQ1_1(isEnded: boolean | null) {
-    advance({ ...survey, isEnded });
-  }
-  function handleQ1_2(episodeMin: number | null, episodeMax: number | null) {
-    advance({ ...survey, episodeMin, episodeMax });
-  }
-  function handleQ2(runtimeMin: number | null, runtimeMax: number | null) {
-    advance({ ...survey, runtimeMin, runtimeMax });
-  }
+  function handleQ1_1(isEnded: boolean | null) { advance({ ...survey, isEnded }); }
+  function handleQ1_2(episodeMin: number | null, episodeMax: number | null) { advance({ ...survey, episodeMin, episodeMax }); }
+  function handleQ2(runtimeMin: number | null, runtimeMax: number | null) { advance({ ...survey, runtimeMin, runtimeMax }); }
   function handleQ5Confirm() {
     if (multiTemp.length === 0) return;
     let merged: Desired = {};
@@ -338,23 +317,10 @@ export default function NetflixPage() {
     }
     advance({ ...survey, desired: mergeDesired(survey.desired, merged) });
   }
-  function handleQ6(desired: Desired) {
-    advance({ ...survey, desired: mergeDesired(survey.desired, desired) });
-  }
-  function handleQ7(desired: Desired) {
-    advance({ ...survey, desired: mergeDesired(survey.desired, desired) });
-  }
-
-  // ── 다중 선택 확인 핸들러 ────────────────────────────────────────────────────
-
-  function handleQ1Confirm() {
-    if (multiTemp.length === 0) return;
-    advance({ ...survey, contentTypes: multiTemp });
-  }
-  function handleQ3Confirm() {
-    if (multiTemp.length === 0) return;
-    advance({ ...survey, countries: multiTemp });
-  }
+  function handleQ6(desired: Desired) { advance({ ...survey, desired: mergeDesired(survey.desired, desired) }); }
+  function handleQ7(desired: Desired) { advance({ ...survey, desired: mergeDesired(survey.desired, desired) }); }
+  function handleQ1Confirm() { if (multiTemp.length === 0) return; advance({ ...survey, contentTypes: multiTemp }); }
+  function handleQ3Confirm() { if (multiTemp.length === 0) return; advance({ ...survey, countries: multiTemp }); }
   function handleQ8Confirm() {
     if (multiTemp.length === 0) return;
     const isNone = multiTemp.includes('none');
@@ -367,17 +333,13 @@ export default function NetflixPage() {
     });
   }
 
-  // ── 진행 상태 계산 ──────────────────────────────────────────────────────────
-
-  const activeSteps   = computeActiveSteps(survey);
-  const stepNumber    = stepHistory.length + 1;
-  const totalSteps    = activeSteps.length;
-
-  // ── 렌더 ────────────────────────────────────────────────────────────────────
+  const activeSteps = computeActiveSteps(survey);
+  const stepNumber  = stepHistory.length + 1;
+  const totalSteps  = activeSteps.length;
 
   return (
-    <main className="min-h-screen flex justify-center items-start" style={{ background: '#141414' }}>
-      <div className="w-full max-w-[390px] min-h-screen flex flex-col" style={{ background: '#141414' }}>
+    <main className="min-h-screen flex justify-center items-start" style={{ background: '#0D0D0D' }}>
+      <div className="w-full max-w-[430px] min-h-screen flex flex-col" style={{ background: '#0D0D0D' }}>
 
         {view === 'intro' && <IntroView onStart={handleStart} />}
 
@@ -410,7 +372,6 @@ export default function NetflixPage() {
             hiddenIds={new Set([...hiddenIds, ...nativeWatchedIds])}
             onHide={(item) => {
               setHiddenIds(prev => new Set([...prev, item.id]));
-              // 네이티브 앱이면 SwiftData에도 저장
               window.webkit?.messageHandlers?.watched?.postMessage({
                 id:          item.id,
                 title:       item.title,
@@ -433,14 +394,13 @@ export default function NetflixPage() {
 
 function IntroView({ onStart }: { onStart: () => void }) {
   return (
-    <div className="flex flex-col flex-1 animate-fade-slide">
-      <div className="px-5 pt-5">
+    <div className="flex flex-col flex-1 animate-fade-slide" style={{ background: '#0D0D0D' }}>
+      <div style={{ padding: '20px 20px 0' }}>
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-sm font-medium active:scale-95 transition-all"
-          style={{ color: '#888' }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#666', textDecoration: 'none' }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 18l-6-6 6-6" />
           </svg>
           처음으로
@@ -448,34 +408,26 @@ function IntroView({ onStart }: { onStart: () => void }) {
       </div>
 
       <div className="flex flex-col flex-1 items-center justify-center px-6 gap-10">
-        <div className="flex flex-col items-center gap-8">
-          <div className="text-5xl font-bold tracking-tight" style={{ color: '#E50914' }}>넷플</div>
-          <div className="text-center flex flex-col gap-3">
-            <h1 className="text-2xl font-bold leading-tight" style={{ color: '#fff' }}>
-              오늘 뭐볼까?<br />넷플에서 골라봐
-            </h1>
-            <p className="text-sm leading-relaxed" style={{ color: '#888' }}>
-              몇 가지 질문으로 딱 맞는 콘텐츠 추려줄게
-            </p>
-          </div>
-          <div className="flex gap-3">
-            {['🎬', '🍿', '😱', '💕', '😂'].map((e, i) => (
-              <div key={i} className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: '#1f1f1f' }}>
-                {e}
-              </div>
-            ))}
+        <div className="flex flex-col items-center gap-6 text-center">
+          <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#E50914', fontStyle: 'italic' }}>NETFLIX</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <h1 style={{ fontSize: 26, fontWeight: 900, color: '#fff', lineHeight: 1.2, margin: 0 }}>오늘 뭐볼까?<br />넷플에서 골라봐</h1>
+            <p style={{ fontSize: 13, color: '#666', lineHeight: 1.5 }}>몇 가지 질문으로 딱 맞는 콘텐츠 추려줄게</p>
           </div>
         </div>
 
-        <div className="w-full flex flex-col gap-3">
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button
             onClick={onStart}
-            className="w-full py-4 rounded-2xl text-white text-base font-bold tracking-wide active:scale-95 transition-transform"
-            style={{ background: '#E50914', boxShadow: '0 8px 24px rgba(229,9,20,0.4)' }}
+            style={{
+              width: '100%', padding: '14px', borderRadius: 10,
+              background: '#E50914', color: '#fff', fontSize: 13, fontWeight: 800,
+              border: 'none', cursor: 'pointer', transition: 'all 150ms',
+            }}
           >
             시작하기
           </button>
-          <p className="text-center text-xs" style={{ color: '#555' }}>1분 이내</p>
+          <p style={{ textAlign: 'center', fontSize: 11, color: '#555' }}>1분 이내</p>
         </div>
       </div>
     </div>
@@ -504,199 +456,196 @@ interface QuizStepViewProps {
 
 function QuizStepView(p: QuizStepViewProps) {
   const progress = (p.stepNumber / p.totalSteps) * 100;
+  const meta = STEP_META[p.step];
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden px-5 pt-5 pb-6 gap-5 animate-fade-slide">
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0D0D0D' }} className="animate-fade-slide">
+
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={p.onBack}
-          className="flex items-center gap-1.5 text-sm font-medium active:scale-95 transition-all"
-          style={{ color: '#888' }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-          이전
-        </button>
-        <span className="text-xs font-semibold tracking-widest" style={{ color: '#666' }}>
-          {p.stepNumber} / {p.totalSteps}
-        </span>
-        <div className="w-10" />
+      <div style={{ padding: '20px 20px 0', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <button
+            onClick={p.onBack}
+            style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#666', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+            이전
+          </button>
+          <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.5px' }}>Q{p.stepNumber} / {p.totalSteps}</span>
+        </div>
+
+        <div style={{ height: 2, background: '#222', borderRadius: 2, marginBottom: 20 }}>
+          <div style={{ height: '100%', width: `${progress}%`, background: '#E50914', borderRadius: 2, transition: 'width 0.5s ease-out' }} />
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 900, color: '#fff', lineHeight: 1.2, margin: 0 }}>{meta.title}</h2>
+          {meta.sub && <p style={{ fontSize: 12, color: '#666', marginTop: 5, marginBottom: 0 }}>{meta.sub}</p>}
+        </div>
       </div>
 
-      {/* 진행 바 */}
-      <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: '#2a2a2a' }}>
-        <div
-          className="h-full rounded-full transition-all duration-500 ease-out"
-          style={{ width: `${progress}%`, background: '#E50914' }}
-        />
+      {/* 스텝별 선택지 */}
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 20px' }}>
+
+        {p.step === 'q1' && (
+          <GridMultiStep
+            options={Q1_OPTIONS}
+            selected={p.multiTemp}
+            exclusiveValues={['any']}
+            onChange={(v) => p.setMultiTemp(toggleMulti(p.multiTemp, v, ['any']))}
+            onConfirm={p.onQ1Confirm}
+          />
+        )}
+
+        {p.step === 'q1_1' && (
+          <ListSingleStep
+            options={[
+              { label: '완결난 거 보고 싶어', emoji: '✅' },
+              { label: '완결 안 나도 상관없어', emoji: '📺' },
+            ]}
+            onSelect={(label) => p.onQ1_1(label.startsWith('완결난') ? true : null)}
+          />
+        )}
+
+        {p.step === 'q1_2' && (
+          <ListSingleStep
+            options={[
+              { label: '8편 이내', emoji: '✨' },
+              { label: '8~16편', emoji: '📺' },
+              { label: '길어도 상관없어', emoji: '🔥' },
+            ]}
+            onSelect={(label) => {
+              if (label === '8편 이내')   p.onQ1_2(null, 8);
+              else if (label === '8~16편') p.onQ1_2(8, 16);
+              else                         p.onQ1_2(null, null);
+            }}
+          />
+        )}
+
+        {p.step === 'q2' && (
+          <ListSingleStep
+            options={[
+              { label: '1시간 이내', emoji: '⏱' },
+              { label: '1~2시간',   emoji: '🕐' },
+              { label: '2시간 이상', emoji: '🎬' },
+              { label: '시간 상관없어', emoji: '⏳' },
+            ]}
+            onSelect={(label) => {
+              if (label === '1시간 이내')     p.onQ2(null, 60);
+              else if (label === '1~2시간')   p.onQ2(60, 120);
+              else if (label === '2시간 이상') p.onQ2(120, null);
+              else                             p.onQ2(null, null);
+            }}
+          />
+        )}
+
+        {p.step === 'q3' && (
+          <GridMultiStep
+            options={Q3_OPTIONS}
+            selected={p.multiTemp}
+            exclusiveValues={['any']}
+            onChange={(v) => p.setMultiTemp(toggleMulti(p.multiTemp, v, ['any']))}
+            onConfirm={p.onQ3Confirm}
+          />
+        )}
+
+        {p.step === 'q5' && (
+          <GridMultiStep
+            options={Q5_OPTIONS}
+            selected={p.multiTemp}
+            exclusiveValues={[]}
+            onChange={(v) => p.setMultiTemp(toggleMulti(p.multiTemp, v, []))}
+            onConfirm={p.onQ5Confirm}
+          />
+        )}
+
+        {p.step === 'q6' && (
+          <ListSingleStep
+            options={Q6_OPTIONS.map(o => ({ label: o.label, emoji: o.emoji }))}
+            onSelect={(label) => {
+              const opt = Q6_OPTIONS.find(o => o.label === label)!;
+              p.onQ6(opt.desired);
+            }}
+          />
+        )}
+
+        {p.step === 'q7' && (
+          <ListSingleStep
+            options={Q7_OPTIONS.map(o => ({ label: o.label, emoji: o.emoji }))}
+            onSelect={(label) => {
+              const opt = Q7_OPTIONS.find(o => o.label === label)!;
+              p.onQ7(opt.desired);
+            }}
+          />
+        )}
+
+        {p.step === 'q8' && (
+          <GridMultiStep
+            options={Q8_OPTIONS}
+            selected={p.multiTemp}
+            exclusiveValues={['none']}
+            onChange={(v) => p.setMultiTemp(toggleMulti(p.multiTemp, v, ['none']))}
+            onConfirm={p.onQ8Confirm}
+            confirmLabel="결과 보기"
+          />
+        )}
+
       </div>
-
-      {/* 스텝별 렌더 */}
-      {p.step === 'q1' && (
-        <MultiStep
-          title="오늘 뭐 보고 싶어요?"
-          subTitle="복수 선택 가능해요"
-          options={Q1_OPTIONS}
-          selected={p.multiTemp}
-          exclusiveValues={['any']}
-          onChange={(v) => p.setMultiTemp(toggleMulti(p.multiTemp, v, ['any']))}
-          onConfirm={p.onQ1Confirm}
-        />
-      )}
-
-      {p.step === 'q1_1' && (
-        <SingleStep
-          title="완결난 드라마가 좋아요?"
-          options={[
-            { label: '완결난 거 보고 싶어', emoji: '✅' },
-            { label: '완결 안 나도 상관없어', emoji: '📺' },
-          ]}
-          onSelect={(label) => {
-            p.onQ1_1(label.startsWith('완결난') ? true : null);
-          }}
-        />
-      )}
-
-      {p.step === 'q1_2' && (
-        <SingleStep
-          title="몇 편 정도 볼 수 있어요?"
-          options={[
-            { label: '8편 이내', emoji: '✨' },
-            { label: '8~16편', emoji: '📺' },
-            { label: '길어도 상관없어', emoji: '🔥' },
-          ]}
-          onSelect={(label) => {
-            if (label === '8편 이내')   p.onQ1_2(null, 8);
-            else if (label === '8~16편') p.onQ1_2(8, 16);
-            else                         p.onQ1_2(null, null);
-          }}
-        />
-      )}
-
-      {p.step === 'q2' && (
-        <SingleStep
-          title="얼마나 볼 수 있어요?"
-          options={[
-            { label: '1시간 이내', emoji: '⏱' },
-            { label: '1~2시간',   emoji: '🕐' },
-            { label: '2시간 이상', emoji: '🎬' },
-            { label: '시간 상관없어', emoji: '⏳' },
-          ]}
-          onSelect={(label) => {
-            if (label === '1시간 이내')    p.onQ2(null, 60);
-            else if (label === '1~2시간')   p.onQ2(60, 120);
-            else if (label === '2시간 이상') p.onQ2(120, null);
-            else                             p.onQ2(null, null);
-          }}
-        />
-      )}
-
-      {p.step === 'q3' && (
-        <MultiStep
-          title="어느 나라 콘텐츠가 좋아요?"
-          subTitle="복수 선택 가능해요"
-          options={Q3_OPTIONS}
-          selected={p.multiTemp}
-          exclusiveValues={['any']}
-          onChange={(v) => p.setMultiTemp(toggleMulti(p.multiTemp, v, ['any']))}
-          onConfirm={p.onQ3Confirm}
-        />
-      )}
-
-      {p.step === 'q5' && (
-        <MultiStep
-          title="어떤 느낌이 보고 싶어요?"
-          subTitle="복수 선택 가능해요"
-          options={Q5_OPTIONS}
-          selected={p.multiTemp}
-          exclusiveValues={[]}
-          onChange={(v) => p.setMultiTemp(toggleMulti(p.multiTemp, v, []))}
-          onConfirm={p.onQ5Confirm}
-        />
-      )}
-
-      {p.step === 'q6' && (
-        <SingleStep
-          title="얼마나 집중할 수 있어요?"
-          options={Q6_OPTIONS.map(o => ({ label: o.label, emoji: o.emoji }))}
-          onSelect={(label) => {
-            const opt = Q6_OPTIONS.find(o => o.label === label)!;
-            p.onQ6(opt.desired);
-          }}
-        />
-      )}
-
-      {p.step === 'q7' && (
-        <SingleStep
-          title="누구랑 봐요?"
-          options={Q7_OPTIONS.map(o => ({ label: o.label, emoji: o.emoji }))}
-          onSelect={(label) => {
-            const opt = Q7_OPTIONS.find(o => o.label === label)!;
-            p.onQ7(opt.desired);
-          }}
-        />
-      )}
-
-      {p.step === 'q8' && (
-        <MultiStep
-          title="피하고 싶은 게 있어요?"
-          subTitle="복수 선택 가능해요"
-          options={Q8_OPTIONS}
-          selected={p.multiTemp}
-          exclusiveValues={['none']}
-          onChange={(v) => p.setMultiTemp(toggleMulti(p.multiTemp, v, ['none']))}
-          onConfirm={p.onQ8Confirm}
-          confirmLabel="결과 보기"
-        />
-      )}
     </div>
   );
 }
 
-// ── 단일 선택 공통 컴포넌트 ───────────────────────────────────────────────────
+// ── 리스트형 단일선택 (q1_1, q1_2, q2, q6, q7) ───────────────────────────────
 
-interface SingleStepProps {
-  title: string;
+interface ListSingleStepProps {
   options: { label: string; emoji: string }[];
   onSelect: (label: string) => void;
 }
 
-function SingleStep({ title, options, onSelect }: SingleStepProps) {
+function ListSingleStep({ options, onSelect }: ListSingleStepProps) {
   return (
-    <div className="flex flex-col flex-1 pt-2 min-h-0" style={{ gap: 20 }}>
-      <h2 className="text-xl font-bold leading-snug" style={{ color: '#fff' }}>{title}</h2>
-      <div className="flex flex-col gap-2.5 overflow-y-auto flex-1 min-h-0 pb-2">
-        {options.map(opt => (
-          <button
-            key={opt.label}
-            onClick={() => onSelect(opt.label)}
-            className="w-full py-4 px-5 rounded-2xl text-left flex items-center gap-3 active:scale-[0.98] transition-all"
-            style={{ background: '#1f1f1f', border: '1px solid #2a2a2a', color: '#fff' }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLButtonElement).style.borderColor = '#E50914';
-              (e.currentTarget as HTMLButtonElement).style.background = '#2a0a0a';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.borderColor = '#2a2a2a';
-              (e.currentTarget as HTMLButtonElement).style.background = '#1f1f1f';
-            }}
-          >
-            <span className="text-2xl">{opt.emoji}</span>
-            <span className="font-medium text-base">{opt.label}</span>
-          </button>
-        ))}
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 32 }}>
+      {options.map(opt => (
+        <button
+          key={opt.label}
+          onClick={() => onSelect(opt.label)}
+          style={{
+            width: '100%', padding: '11px 14px', borderRadius: 10,
+            border: '1.5px solid #222', background: '#161616',
+            display: 'flex', alignItems: 'center', gap: 10,
+            cursor: 'pointer', transition: 'all 150ms', textAlign: 'left',
+          }}
+          onTouchStart={e => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = '#E50914';
+            (e.currentTarget as HTMLButtonElement).style.background = '#1c0303';
+          }}
+          onTouchEnd={e => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = '#222';
+            (e.currentTarget as HTMLButtonElement).style.background = '#161616';
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = '#E50914';
+            (e.currentTarget as HTMLButtonElement).style.background = '#1c0303';
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = '#222';
+            (e.currentTarget as HTMLButtonElement).style.background = '#161616';
+          }}
+        >
+          <span style={{ fontSize: 18, flexShrink: 0 }}>{opt.emoji}</span>
+          <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: '#ccc' }}>{opt.label}</span>
+          <div style={{ width: 18, height: 18, borderRadius: '50%', border: '1.5px solid #444', flexShrink: 0 }} />
+        </button>
+      ))}
     </div>
   );
 }
 
-// ── 다중 선택 공통 컴포넌트 ───────────────────────────────────────────────────
+// ── 그리드형 복수선택 (q1, q3, q5, q8) ───────────────────────────────────────
 
-interface MultiStepProps {
-  title: string;
-  subTitle?: string;
+interface GridMultiStepProps {
   options: { label: string; emoji: string; value: string }[];
   selected: string[];
   exclusiveValues: string[];
@@ -705,48 +654,43 @@ interface MultiStepProps {
   confirmLabel?: string;
 }
 
-function MultiStep({
-  title, subTitle, options, selected, onChange, onConfirm, confirmLabel = '다음',
-}: MultiStepProps) {
+function GridMultiStep({ options, selected, onChange, onConfirm, confirmLabel = '다음' }: GridMultiStepProps) {
   return (
-    <div className="flex flex-col flex-1 pt-2 min-h-0" style={{ gap: 16 }}>
-      <div className="shrink-0">
-        <h2 className="text-xl font-bold leading-snug" style={{ color: '#fff' }}>{title}</h2>
-        {subTitle && <p className="text-sm mt-1" style={{ color: '#888' }}>{subTitle}</p>}
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, paddingBottom: 8 }}>
+        {options.map(opt => {
+          const isSelected = selected.includes(opt.value);
+          return (
+            <button
+              key={opt.value}
+              onClick={() => onChange(opt.value)}
+              style={{
+                padding: '16px 12px', borderRadius: 10,
+                border: `1.5px solid ${isSelected ? '#E50914' : '#222'}`,
+                background: isSelected ? '#1c0303' : '#161616',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                cursor: 'pointer', transition: 'all 150ms',
+              }}
+            >
+              <span style={{ fontSize: 22 }}>{opt.emoji}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: isSelected ? '#fff' : '#666', textAlign: 'center', lineHeight: 1.3 }}>{opt.label}</span>
+            </button>
+          );
+        })}
       </div>
-      {/* 선택지 + 버튼을 하나의 스크롤 컨테이너에 넣고, 버튼만 sticky */}
-      <div className="overflow-y-auto flex-1 min-h-0">
-        <div className="grid grid-cols-2 gap-2.5 pb-4">
-          {options.map(opt => {
-            const isSelected = selected.includes(opt.value);
-            return (
-              <button
-                key={opt.value}
-                onClick={() => onChange(opt.value)}
-                className="py-4 px-3 rounded-2xl flex flex-col items-center gap-1.5 active:scale-[0.97] transition-all"
-                style={{
-                  background: isSelected ? '#2a0a0a' : '#1f1f1f',
-                  border: `1px solid ${isSelected ? '#E50914' : '#2a2a2a'}`,
-                  color: isSelected ? '#fff' : '#aaa',
-                }}
-              >
-                <span className="text-2xl">{opt.emoji}</span>
-                <span className="text-sm font-medium text-center leading-tight">{opt.label}</span>
-              </button>
-            );
-          })}
-        </div>
-        {/* 다음 버튼: 스크롤 컨테이너 안에서 하단에 sticky 고정 */}
-        <div style={{ position: 'sticky', bottom: 0, paddingBottom: 4, background: '#141414' }}>
-          <button
-            onClick={onConfirm}
-            disabled={selected.length === 0}
-            className="w-full py-4 rounded-2xl text-white text-base font-bold active:scale-95 transition-transform disabled:opacity-40"
-            style={{ background: '#E50914', boxShadow: selected.length > 0 ? '0 8px 24px rgba(229,9,20,0.3)' : 'none' }}
-          >
-            {confirmLabel}
-          </button>
-        </div>
+      <div style={{ position: 'sticky', bottom: 0, padding: '12px 0 24px', background: '#0D0D0D' }}>
+        <button
+          onClick={onConfirm}
+          disabled={selected.length === 0}
+          style={{
+            width: '100%', padding: '14px', borderRadius: 10,
+            background: '#E50914', color: '#fff', fontSize: 13, fontWeight: 800,
+            border: 'none', cursor: 'pointer',
+            opacity: selected.length === 0 ? 0.4 : 1, transition: 'opacity 150ms',
+          }}
+        >
+          {confirmLabel}
+        </button>
       </div>
     </div>
   );
@@ -758,23 +702,19 @@ function LoadingView() {
   return (
     <div className="flex flex-col flex-1 items-center justify-center gap-6 animate-fade-slide">
       <div className="flex flex-col items-center gap-4">
-        <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
-          style={{ background: '#E50914', boxShadow: '0 8px 24px rgba(229,9,20,0.4)' }}
-        >
+        <div style={{ width: 56, height: 56, borderRadius: 12, background: '#E50914', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>
           🎬
         </div>
-        <div className="flex flex-col items-center gap-2">
-          <p className="text-lg font-bold" style={{ color: '#fff' }}>찾고 있어...</p>
-          <p className="text-sm" style={{ color: '#888' }}>딱 맞는 콘텐츠 고르는 중</p>
+        <div className="flex flex-col items-center gap-1">
+          <p style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>찾고 있어...</p>
+          <p style={{ fontSize: 12, color: '#666' }}>딱 맞는 콘텐츠 고르는 중</p>
         </div>
         <div className="flex gap-2 pt-2">
           {[0, 1, 2].map(i => (
             <div
               key={i}
-              className="w-2 h-2 rounded-full"
               style={{
-                background: '#E50914',
+                width: 8, height: 8, borderRadius: '50%', background: '#E50914',
                 animation: `dot-pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
               }}
             />
@@ -797,18 +737,19 @@ function NoResultView({ onRestart }: { onRestart: () => void }) {
   return (
     <div className="flex flex-col flex-1 items-center justify-center gap-8 px-6 animate-fade-slide">
       <div className="flex flex-col items-center gap-4 text-center">
-        <span className="text-6xl">📺</span>
-        <h2 className="text-xl font-bold" style={{ color: '#fff' }}>
-          에휴 그냥<br />유튜브나 보세요..
-        </h2>
-        <p className="text-sm" style={{ color: '#666' }}>
-          조건에 맞는 콘텐츠를 못 찾겠어
-        </p>
+        <span style={{ fontSize: 52 }}>📺</span>
+        <div>
+          <h2 style={{ fontSize: 18, fontWeight: 800, color: '#fff', lineHeight: 1.3, margin: 0 }}>에휴 그냥<br />유튜브나 보세요..</h2>
+          <p style={{ fontSize: 12, color: '#666', marginTop: 8 }}>조건에 맞는 콘텐츠를 못 찾겠어</p>
+        </div>
       </div>
       <button
         onClick={onRestart}
-        className="w-full py-4 rounded-2xl text-white text-base font-bold active:scale-95 transition-transform"
-        style={{ background: '#E50914', boxShadow: '0 8px 24px rgba(229,9,20,0.4)' }}
+        style={{
+          width: '100%', padding: '14px', borderRadius: 10,
+          background: '#E50914', color: '#fff', fontSize: 13, fontWeight: 800,
+          border: 'none', cursor: 'pointer',
+        }}
       >
         다시 고르기
       </button>
@@ -831,52 +772,51 @@ function ResultView({ results, error, hiddenIds, onHide, onRestart }: ResultView
 
   return (
     <div className="flex flex-col animate-fade-slide">
-      <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+      <div style={{ padding: '20px 20px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h2 className="text-xl font-bold" style={{ color: '#fff' }}>오늘의 추천 🎬</h2>
-          <p className="text-xs mt-0.5" style={{ color: '#888' }}>
+          <h2 style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: 0 }}>오늘의 추천</h2>
+          <p style={{ fontSize: 11, color: '#666', marginTop: 3 }}>
             {error ? '오류가 발생했어요' : `${visible.length}개 골라왔어`}
           </p>
         </div>
         <button
           onClick={onRestart}
-          className="px-4 py-2 rounded-xl text-sm font-medium active:scale-95 transition-all"
-          style={{ background: '#1f1f1f', color: '#E50914', border: '1px solid #E50914' }}
+          style={{
+            padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+            background: 'transparent', color: '#E50914', border: '1.5px solid #E50914', cursor: 'pointer',
+          }}
         >
           다시하기
         </button>
       </div>
 
       {error && (
-        <div className="mx-5 mb-3 px-4 py-3 rounded-xl text-sm" style={{ background: '#2a0a0a', color: '#ff6b6b' }}>
+        <div style={{ margin: '0 20px 12px', padding: '12px 14px', borderRadius: 10, background: '#1c0303', color: '#ff6b6b', fontSize: 12 }}>
           {error}
         </div>
       )}
 
-      <div className="flex flex-col gap-3 px-5 pb-8 pt-1">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '4px 20px 32px' }}>
         {visible.length === 0 && !error && (
           <div className="flex flex-col items-center gap-3 pt-16 text-center">
-            <span className="text-4xl">🎬</span>
-            <p className="text-sm" style={{ color: '#666' }}>아직 데이터가 없어. 내일 다시 와봐!</p>
+            <span style={{ fontSize: 36 }}>🎬</span>
+            <p style={{ fontSize: 12, color: '#666' }}>아직 데이터가 없어. 내일 다시 와봐!</p>
           </div>
         )}
         {visible.map((item, idx) => (
-          <ContentCard
-            key={item.id}
-            item={item}
-            rank={idx + 1}
-            onHide={() => onHide(item)}
-          />
+          <ContentCard key={item.id} item={item} rank={idx + 1} onHide={() => onHide(item)} />
         ))}
       </div>
 
       {visible.length > 0 && (
-        // pb-36: 네이티브 '홈으로 가기' 버튼 공간 확보
-        <div className="px-5 pb-36 pt-2">
+        <div style={{ padding: '0 20px 144px' }}>
           <button
             onClick={onRestart}
-            className="w-full py-4 rounded-2xl text-white text-base font-bold active:scale-95 transition-transform"
-            style={{ background: '#1f1f1f', border: '1px solid #2a2a2a' }}
+            style={{
+              width: '100%', padding: '14px', borderRadius: 10,
+              background: '#161616', color: '#666', fontSize: 13, fontWeight: 600,
+              border: '1px solid #222', cursor: 'pointer',
+            }}
           >
             다른 거 찾아볼게
           </button>
@@ -920,82 +860,68 @@ function ContentCard({ item, rank, onHide }: ContentCardProps) {
       : item.episode_count ? `${item.episode_count}화` : null;
 
   return (
-    <div
-      className="rounded-2xl overflow-hidden"
-      style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
-    >
+    <div style={{ borderRadius: 12, overflow: 'hidden', background: '#161616', border: '1px solid #222' }}>
       {/* 상단: 포스터 + 기본 정보 */}
       <div className="flex gap-3">
-        {/* 포스터 */}
-        <div className="relative shrink-0 w-20 h-28 overflow-hidden" style={{ background: '#0f0f0f' }}>
-          <div
-            className="absolute top-1.5 left-1.5 w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold z-10"
-            style={{ background: '#E50914', color: '#fff' }}
-          >
+        <div style={{ position: 'relative', flexShrink: 0, width: 80, height: 112, background: '#0f0f0f', overflow: 'hidden' }}>
+          <div style={{
+            position: 'absolute', top: 6, left: 6, width: 22, height: 22,
+            borderRadius: 6, background: '#E50914',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 11, fontWeight: 800, color: '#fff', zIndex: 10,
+          }}>
             {rank}
           </div>
           {item.poster_url ? (
             <Image src={item.poster_url} alt={item.title} fill className="object-cover" sizes="80px" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-3xl">🎬</div>
+            <div className="w-full h-full flex items-center justify-center" style={{ fontSize: 28 }}>🎬</div>
           )}
         </div>
 
-        {/* 텍스트 */}
-        <div className="flex flex-col flex-1 py-3 pr-3 gap-1.5 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <h3
-              className="text-sm font-bold leading-snug flex-1 min-w-0"
-              style={{
-                color: '#fff',
-                overflow: 'hidden',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-              }}
-            >
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '12px 12px 12px 0', gap: 6, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+            <h3 style={{
+              fontSize: 14, fontWeight: 700, color: '#fff', lineHeight: 1.3, flex: 1, minWidth: 0,
+              overflow: 'hidden', display: '-webkit-box',
+              WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+            }}>
               {item.title}
             </h3>
-            <span
-              className="shrink-0 px-1.5 py-0.5 rounded-md text-xs font-bold"
-              style={{ background: `${matchColor}22`, color: matchColor, border: `1px solid ${matchColor}44` }}
-            >
+            <span style={{
+              flexShrink: 0, padding: '2px 6px', borderRadius: 5, fontSize: 11, fontWeight: 700,
+              background: `${matchColor}22`, color: matchColor, border: `1px solid ${matchColor}44`,
+            }}>
               {matchPct}%
             </span>
           </div>
 
-          {/* 배지 */}
-          <div className="flex flex-wrap gap-1">
-            <span className="px-2 py-0.5 rounded-md text-xs" style={{ background: '#2a2a2a', color: '#E50914' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            <span style={{ padding: '2px 7px', borderRadius: 5, fontSize: 11, background: '#222', color: '#E50914' }}>
               {TYPE_LABEL[item.content_type] ?? item.content_type}
             </span>
             {item.release_year && (
-              <span className="px-2 py-0.5 rounded-md text-xs" style={{ background: '#2a2a2a', color: '#888' }}>
+              <span style={{ padding: '2px 7px', borderRadius: 5, fontSize: 11, background: '#222', color: '#666' }}>
                 {item.release_year}
               </span>
             )}
             {lengthLabel && (
-              <span className="px-2 py-0.5 rounded-md text-xs" style={{ background: '#2a2a2a', color: '#888' }}>
+              <span style={{ padding: '2px 7px', borderRadius: 5, fontSize: 11, background: '#222', color: '#666' }}>
                 {lengthLabel}
               </span>
             )}
           </div>
 
           {item.genres.length > 0 && (
-            <p className="text-xs" style={{ color: '#666' }}>{item.genres.slice(0, 2).join(' · ')}</p>
+            <p style={{ fontSize: 11, color: '#555' }}>{item.genres.slice(0, 2).join(' · ')}</p>
           )}
 
           {item.overview && (
-            <p
-              className="text-xs leading-relaxed"
-              style={{
-                color: '#666',
-                overflow: 'hidden',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-              }}
-            >
+            <p style={{
+              fontSize: 11, color: '#555', lineHeight: 1.5,
+              overflow: 'hidden', display: '-webkit-box',
+              WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+            }}>
               {item.overview}
             </p>
           )}
@@ -1003,52 +929,41 @@ function ContentCard({ item, rank, onHide }: ContentCardProps) {
       </div>
 
       {/* 하단: 액션 버튼 */}
-      <div
-        className="flex items-center gap-2 px-3 py-2.5"
-        style={{ borderTop: '1px solid #2a2a2a' }}
-      >
-        {/* 넷플릭스 앱 열기 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderTop: '1px solid #222' }}>
         {deepLink && (
-          <a
-            href={deepLink}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-bold active:scale-95 transition-all"
-            style={{ background: '#E50914', color: '#fff' }}
-          >
+          <a href={deepLink} style={{
+            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            padding: '10px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+            background: '#E50914', color: '#fff', textDecoration: 'none',
+          }}>
             <span>▶</span>
             <span>넷플에서 보기</span>
           </a>
         )}
         {!deepLink && item.netflix_link && (
-          <a
-            href={item.netflix_link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-bold active:scale-95 transition-all"
-            style={{ background: '#E50914', color: '#fff' }}
-          >
+          <a href={item.netflix_link} target="_blank" rel="noopener noreferrer" style={{
+            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            padding: '10px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+            background: '#E50914', color: '#fff', textDecoration: 'none',
+          }}>
             <span>▶</span>
             <span>넷플에서 보기</span>
           </a>
         )}
 
-        {/* 네이버 검색 */}
-        <a
-          href={getNaverSearchUrl(item.title)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-sm font-medium active:scale-95 transition-all"
-          style={{ background: '#1f1f1f', color: '#03c75a', border: '1px solid #2a2a2a' }}
-        >
+        <a href={getNaverSearchUrl(item.title)} target="_blank" rel="noopener noreferrer" style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '10px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+          background: '#03C75A', color: '#fff', textDecoration: 'none',
+        }}>
           검색
         </a>
 
-        {/* 이건 봤어요 */}
-        <button
-          onClick={onHide}
-          className="flex items-center justify-center py-2.5 px-3 rounded-xl text-sm font-medium active:scale-95 transition-all"
-          style={{ background: '#1f1f1f', color: '#666', border: '1px solid #2a2a2a' }}
-          title="이건 봤어요"
-        >
+        <button onClick={onHide} style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '10px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+          background: '#222', color: '#666', border: 'none', cursor: 'pointer',
+        }}>
           봤어
         </button>
       </div>

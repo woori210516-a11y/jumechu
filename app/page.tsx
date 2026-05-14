@@ -2,51 +2,90 @@ import Link from 'next/link';
 
 export default function Page() {
   return (
-    <main className="min-h-screen flex justify-center items-start">
-      <div className="w-full max-w-[390px] min-h-screen bg-white flex flex-col shadow-2xl shadow-rose-200/50">
-        <div className="flex flex-col flex-1 items-center justify-center px-6 gap-4">
+    <main style={{ height: '100vh', display: 'flex', justifyContent: 'center', background: '#0D0D0D' }}>
+      <div style={{ width: '100%', maxWidth: 430, height: '100vh', display: 'flex', flexDirection: 'column' }}>
 
-          {/* 음식 */}
-          <Link
-            href="/menu"
-            className="w-full rounded-3xl overflow-hidden active:scale-[0.98] transition-transform shadow-lg"
-            style={{ background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)', border: '2px solid #fed7aa' }}
-          >
-            <div className="flex items-center gap-5 px-6 py-7">
-              <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shrink-0 shadow-md"
-                style={{ background: '#fb923c' }}
-              >
-                🍜
-              </div>
-              <p className="text-xl font-bold text-gray-900">오늘 뭐 먹지?</p>
-              <svg className="ml-auto text-orange-300 shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
+        {/* 음식 — 상단 50% */}
+        <Link
+          href="/menu"
+          style={{
+            flex: 1,
+            background: '#FF5C00',
+            display: 'block',
+            position: 'relative',
+            overflow: 'hidden',
+            textDecoration: 'none',
+          }}
+        >
+          <img
+            src="/images/food-illust.png"
+            alt=""
+            style={{ position: 'absolute', top: 0, right: 0, width: 160, height: 160, objectFit: 'contain' }}
+          />
+          <div style={{
+            position: 'absolute',
+            bottom: 28,
+            left: 24,
+            right: 24,
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '2.5px', color: 'rgba(255,255,255,0.5)' }}>FOOD</span>
+              <h2 style={{ fontSize: 24, fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1.1 }}>오늘 뭐 먹지?</h2>
+              <span style={{ fontSize: 10, fontWeight: 400, color: 'rgba(255,255,255,0.6)' }}>메뉴 추천받기</span>
             </div>
-          </Link>
+            <div style={{
+              width: 40, height: 40, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontSize: 20, lineHeight: 1,
+            }}>→</div>
+          </div>
+        </Link>
 
-          {/* 넷플릭스 */}
-          <Link
-            href="/ott"
-            className="w-full rounded-3xl overflow-hidden active:scale-[0.98] transition-transform shadow-lg"
-            style={{ background: 'linear-gradient(135deg, #1a0000 0%, #2d0000 100%)', border: '2px solid #7f1d1d' }}
-          >
-            <div className="flex items-center gap-5 px-6 py-7">
-              <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shrink-0 shadow-md"
-                style={{ background: '#E50914' }}
-              >
-                🎬
-              </div>
-              <p className="text-xl font-bold text-white">오늘 뭐 보지?</p>
-              <svg className="ml-auto shrink-0" style={{ color: '#E50914' }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
+        {/* 영화 — 하단 50% */}
+        <Link
+          href="/ott"
+          style={{
+            flex: 1,
+            background: '#0D0D0D',
+            display: 'block',
+            position: 'relative',
+            overflow: 'hidden',
+            textDecoration: 'none',
+            borderTop: '1px solid #1a1a1a',
+          }}
+        >
+          <img
+            src="/images/netflix-illust.png"
+            alt=""
+            style={{ position: 'absolute', top: 0, right: 0, width: 160, height: 160, objectFit: 'contain' }}
+          />
+          <div style={{
+            position: 'absolute',
+            bottom: 28,
+            left: 24,
+            right: 24,
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#E50914', fontStyle: 'italic' }}>NETFLIX</span>
+              <h2 style={{ fontSize: 24, fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1.1 }}>오늘 뭐 보지?</h2>
+              <span style={{ fontSize: 10, fontWeight: 400, color: 'rgba(255,255,255,0.6)' }}>콘텐츠 추천받기</span>
             </div>
-          </Link>
+            <div style={{
+              width: 40, height: 40, borderRadius: '50%',
+              background: 'rgba(229,9,20,0.2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#E50914', fontSize: 20, lineHeight: 1,
+            }}>→</div>
+          </div>
+        </Link>
 
-        </div>
       </div>
     </main>
   );
