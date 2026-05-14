@@ -495,8 +495,8 @@ function QuizView({
   const progress = (questionNumber / total) * 100;
 
   return (
-    <div className="flex flex-col flex-1 px-5 pt-5 pb-6 gap-5 animate-fade-slide">
-      <div className="flex items-center justify-between">
+    <div className="h-screen overflow-hidden flex flex-col px-5 pt-5 gap-5 animate-fade-slide">
+      <div className="flex items-center justify-between shrink-0">
         <button
           onClick={onBack}
           className="flex items-center gap-1.5 text-sm text-gray-400 font-medium active:scale-95 transition-all"
@@ -512,14 +512,14 @@ function QuizView({
         <div className="w-10" />
       </div>
 
-      <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+      <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden shrink-0">
         <div
           className="h-full bg-orange-400 rounded-full transition-all duration-500 ease-out"
           style={{ width: `${progress}%` }}
         />
       </div>
 
-      <div className="flex items-start gap-3 pt-1">
+      <div className="flex items-start gap-3 pt-1 shrink-0">
         <CharacterImage size={40} src={quizImageSrc} className="shrink-0 mt-1" />
         <div className="flex-1 bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm border border-gray-100">
           <p className="text-base font-bold text-gray-800 leading-snug">{question.text}</p>
@@ -530,20 +530,22 @@ function QuizView({
       </div>
 
       {question.type === 'single' ? (
-        <div className="flex flex-col gap-2.5 flex-1">
-          {question.options.map((option) => (
-            <button
-              key={option}
-              onClick={() => onSingleAnswer(option)}
-              className="w-full py-3.5 px-5 rounded-2xl bg-white border border-gray-200 text-gray-700 font-medium text-base text-left active:scale-[0.98] active:bg-orange-50 hover:border-orange-300 transition-all shadow-sm"
-            >
-              {option}
-            </button>
-          ))}
+        <div className="overflow-y-auto flex-1 min-h-0 pb-6">
+          <div className="flex flex-col gap-2.5">
+            {question.options.map((option) => (
+              <button
+                key={option}
+                onClick={() => onSingleAnswer(option)}
+                className="w-full py-3.5 px-5 rounded-2xl bg-white border border-gray-200 text-gray-700 font-medium text-base text-left active:scale-[0.98] active:bg-orange-50 hover:border-orange-300 transition-all shadow-sm"
+              >
+                {option}
+              </button>
+            ))}
+          </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-3 flex-1">
-          <div className="grid grid-cols-2 gap-2.5">
+        <div className="overflow-y-auto flex-1 min-h-0">
+          <div className="grid grid-cols-2 gap-2.5 pb-4">
             {question.options.map((option) => {
               const selected = multiSelect.includes(option);
               return (
@@ -561,7 +563,7 @@ function QuizView({
               );
             })}
           </div>
-          <div className="mt-auto pt-2">
+          <div style={{ position: 'sticky', bottom: 0, paddingBottom: 24, background: 'white' }}>
             <button
               onClick={onMultiConfirm}
               disabled={multiSelect.length === 0}
