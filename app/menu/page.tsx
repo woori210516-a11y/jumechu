@@ -395,7 +395,7 @@ function IntroView({ onSolo, onTogether }: { onSolo: () => void; onTogether: () 
           />
           <div className="text-center">
             <h1 style={{ fontSize: 24, fontWeight: 900, color: '#1a1a1a', lineHeight: 1.2, margin: 0 }}>오늘 뭐 먹지?</h1>
-            <p style={{ marginTop: 8, fontSize: 13, color: '#999' }}>혼자 고를지, 같이 고를지 선택해봐</p>
+            <p style={{ marginTop: 8, fontSize: 13, color: '#999' }}>혼자 고를지, 같이 고를지 선택하기</p>
           </div>
         </div>
 
