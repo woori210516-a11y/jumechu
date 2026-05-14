@@ -43,7 +43,7 @@ function MenuContent() {
   const [groupState, setGroupState] = useState<GroupState | null>(null);
   const [roomErrorInfo, setRoomErrorInfo] = useState<{ title: string; sub: string }>({
     title: '방을 찾을 수 없어요',
-    sub: '링크가 잘못됐거나 이미 삭제된 방이야',
+    sub: '링크가 잘못됐거나 이미 삭제된 방이예요',
   });
 
   // 공유 링크 접속 처리
@@ -67,7 +67,7 @@ function MenuContent() {
       try {
         const room = await fetchRoom(roomId!);
         if (!room) {
-          showRoomError('방을 찾을 수 없어요', '링크가 잘못됐거나 이미 삭제된 방이야');
+          showRoomError('방을 찾을 수 없어요', '링크가 잘못됐거나 이미 삭제된 방이예요');
           return;
         }
 
@@ -108,7 +108,7 @@ function MenuContent() {
         }
 
         if (roomState.participants.length >= room.max_members) {
-          showRoomError('인원이 꽉 찼어요', `최대 ${room.max_members}명까지 참여할 수 있어`);
+          showRoomError('인원이 꽉 찼어요', `최대 ${room.max_members}명까지 참여할 수 있어요`);
           return;
         }
         const { nickname, participantId } = await joinRoom(roomId!);
@@ -117,7 +117,7 @@ function MenuContent() {
         setView('quiz');
       } catch (e) {
         console.error('join error:', e);
-        showRoomError('오류가 발생했어요', '잠시 후 다시 시도해줘');
+        showRoomError('오류가 발생했어요', '잠시 후 다시 시도하세요');
       }
     }
     doJoin();
