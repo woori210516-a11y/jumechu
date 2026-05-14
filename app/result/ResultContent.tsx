@@ -7,7 +7,7 @@ import { parseShareParam } from '@/app/lib/share';
 import { menus } from '@/app/lib/menus';
 import type { Concept } from '@/app/types';
 
-const VALID_CONCEPTS: Concept[] = ['boyfriend', 'mom', 'together'];
+const VALID_CONCEPTS: Concept[] = ['solo', 'together'];
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -21,7 +21,7 @@ export default function ResultContent({ searchParams }: { searchParams: SearchPa
   const rawConcept = typeof params.concept === 'string' ? params.concept : '';
   const concept: Concept = VALID_CONCEPTS.includes(rawConcept as Concept)
     ? (rawConcept as Concept)
-    : 'boyfriend';
+    : 'solo';
 
   return (
     <main className="min-h-screen flex justify-center items-start">

@@ -34,7 +34,7 @@ export interface Answers {
   meatType?: string[];
 }
 
-export type Concept = 'boyfriend' | 'mom' | 'together';
+export type Concept = 'solo' | 'together';
 
 export interface ScoredMenu {
   menu: Menu;

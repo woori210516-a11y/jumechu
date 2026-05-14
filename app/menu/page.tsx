@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import CharacterImage from '@/app/components/CharacterImage';
 import ResultView from '@/app/components/ResultView';
 import { GroupPeopleView, GroupInviteView, GroupWaitingView } from '@/app/components/GroupFlow';
 import { questions, getActiveQuestions } from '@/app/lib/questions';
@@ -24,35 +23,6 @@ interface GroupState {
   maxMembers: number;
 }
 
-const CONCEPT_CONFIG: Record<Concept, { label: string; title: string; sub: string; button: string }> = {
-  boyfriend: {
-    label: '남친',
-    title: '울자기 머먹을까?',
-    sub: '이것도 싫고ㅎ저것도 싫다고 해서~ 준비해봣어ㅎ',
-    button: '아무거나 먹자며..',
-  },
-  mom: {
-    label: '엄마',
-    title: '아휴 엄마가 밥먹으랬지!!!',
-    sub: '너너 맨날 라면이나 처먹으니까 살이찌지 저거저거 어휴 내가 못살아',
-    button: '아 알겟다고 ㅠ',
-  },
-  together: {
-    label: '같이고르기',
-    title: '그래서 오늘 뭐먹을껀데?',
-    sub: '다 고르면 깨워라..',
-    button: '안 고르면 라면',
-  },
-};
-
-const CONCEPT_IMAGE: Record<Concept, { main: string; quiz: string }> = {
-  boyfriend: { main: '/boyfriend-main.png', quiz: '/boyfriend-quiz.png' },
-  mom:       { main: '/mom-main.png',       quiz: '/mom-quiz.png' },
-  together:  { main: '/group-main.png',     quiz: '/group-quiz.png' },
-};
-
-const CONCEPT_ORDER: Concept[] = ['boyfriend', 'mom', 'together'];
-
 // ── 메인 컴포넌트 ──────────────────────────────────────────────────────────────────
 
 function MenuContent() {
@@ -60,7 +30,7 @@ function MenuContent() {
   const hasJoinedRef = useRef(false);
 
   const [view, setView] = useState<View>('intro');
-  const [concept, setConcept] = useState<Concept>('boyfriend');
+  const [concept, setConcept] = useState<Concept>('solo');
   const {
     questionIndex, setQuestionIndex,
     answers, setAnswers,
@@ -83,7 +53,6 @@ function MenuContent() {
     if (!roomId) return;
     hasJoinedRef.current = true;
 
-    // URL 정리 헬퍼 (done 방은 /room/<id> 유지, 그 외는 /menu)
     function cleanUrl(keepRoomUrl = false) {
       const target = keepRoomUrl ? `/room/${roomId}` : '/menu';
       window.history.replaceState({}, '', target);
@@ -158,13 +127,16 @@ function MenuContent() {
   const currentQuestion = activeQuestions[questionIndex];
   const total = activeQuestions.length;
 
-  function startQuiz() {
+  function startSolo() {
     resetQuiz();
-    if (concept === 'together') {
-      setView('group-people');
-    } else {
-      setView('quiz');
-    }
+    setConcept('solo');
+    setView('quiz');
+  }
+
+  function startTogether() {
+    resetQuiz();
+    setConcept('together');
+    setView('group-people');
   }
 
   async function handleGroupPeopleNext(maxMembers: number) {
@@ -298,7 +270,7 @@ function MenuContent() {
       <div className="w-full max-w-[390px] min-h-screen bg-white flex flex-col shadow-2xl shadow-rose-200/50">
 
         {view === 'intro' && (
-          <IntroView concept={concept} onConceptChange={setConcept} onStart={startQuiz} />
+          <IntroView onSolo={startSolo} onTogether={startTogether} />
         )}
 
         {view === 'group-people' && (
@@ -323,7 +295,6 @@ function MenuContent() {
             questionNumber={questionIndex + 1}
             total={total}
             multiSelect={multiSelect}
-            quizImageSrc={CONCEPT_IMAGE[concept].quiz}
             onSingleAnswer={handleSingleAnswer}
             onToggleMulti={toggleMultiOption}
             onMultiConfirm={handleMultiConfirm}
@@ -393,18 +364,9 @@ function RoomErrorView({ title, sub, onBack }: { title: string; sub: string; onB
 
 // ── 인트로 화면 ────────────────────────────────────────────────────────────────────
 
-interface IntroViewProps {
-  concept: Concept;
-  onConceptChange: (c: Concept) => void;
-  onStart: () => void;
-}
-
-function IntroView({ concept, onConceptChange, onStart }: IntroViewProps) {
-  const cfg = CONCEPT_CONFIG[concept];
-
+function IntroView({ onSolo, onTogether }: { onSolo: () => void; onTogether: () => void }) {
   return (
     <div className="flex flex-col flex-1 animate-fade-slide">
-      {/* 뒤로가기 */}
       <div className="px-5 pt-5">
         <Link
           href="/"
@@ -417,48 +379,34 @@ function IntroView({ concept, onConceptChange, onStart }: IntroViewProps) {
         </Link>
       </div>
 
-      {/* 컨셉 탭 */}
-      <div className="px-5 pt-3">
-        <div className="flex gap-2 bg-gray-100 rounded-2xl p-1">
-          {CONCEPT_ORDER.map((c) => (
-            <button
-              key={c}
-              onClick={() => onConceptChange(c)}
-              className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
-                concept === c ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-400'
-              }`}
-            >
-              {CONCEPT_CONFIG[c].label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 메인 콘텐츠 */}
       <div className="flex flex-col flex-1 items-center justify-center px-6 gap-10">
-        <div className="flex flex-col items-center gap-6">
-          <div className="flex items-center justify-center">
-            <Image
-              src={CONCEPT_IMAGE[concept].main}
-              alt="캐릭터"
-              width={200}
-              height={200}
-              className="object-contain"
-              priority
-            />
-          </div>
+        <div className="flex flex-col items-center gap-4">
+          <Image
+            src="/group-main.png"
+            alt="음식고르기"
+            width={180}
+            height={180}
+            className="object-contain"
+            priority
+          />
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 leading-tight">{cfg.title}</h1>
-            <p className="mt-3 text-gray-400 text-sm leading-relaxed">{cfg.sub}</p>
+            <h1 className="text-2xl font-bold text-gray-900 leading-tight">오늘 뭐 먹지?</h1>
+            <p className="mt-2 text-gray-400 text-sm">혼자 고를지, 같이 고를지 선택해봐</p>
           </div>
         </div>
 
         <div className="w-full flex flex-col gap-3">
           <button
-            onClick={onStart}
+            onClick={onSolo}
             className="w-full py-4 rounded-2xl bg-orange-400 text-white text-base font-bold tracking-wide shadow-lg shadow-orange-200 active:scale-95 transition-transform"
           >
-            {cfg.button}
+            혼자 고르기
+          </button>
+          <button
+            onClick={onTogether}
+            className="w-full py-4 rounded-2xl bg-white border-2 border-orange-200 text-orange-400 text-base font-bold active:scale-95 hover:bg-orange-50 transition-all"
+          >
+            같이 고르기
           </button>
           <p className="text-center text-xs text-gray-300">총 10여 가지 질문 · 1분 이내</p>
         </div>
@@ -474,7 +422,6 @@ interface QuizViewProps {
   questionNumber: number;
   total: number;
   multiSelect: string[];
-  quizImageSrc: string;
   onSingleAnswer: (option: string) => void;
   onToggleMulti: (option: string) => void;
   onMultiConfirm: () => void;
@@ -486,7 +433,6 @@ function QuizView({
   questionNumber,
   total,
   multiSelect,
-  quizImageSrc,
   onSingleAnswer,
   onToggleMulti,
   onMultiConfirm,
@@ -520,7 +466,7 @@ function QuizView({
       </div>
 
       <div className="flex items-start gap-3 pt-1 shrink-0">
-        <CharacterImage size={40} src={quizImageSrc} className="shrink-0 mt-1" />
+        <Image src="/group-quiz.png" alt="캐릭터" width={40} height={40} className="shrink-0 mt-1 rounded-full object-cover" />
         <div className="flex-1 bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm border border-gray-100">
           <p className="text-base font-bold text-gray-800 leading-snug">{question.text}</p>
           {question.subText && (

@@ -6,15 +6,13 @@ import CharacterImage from '@/app/components/CharacterImage';
 import type { Concept, Menu, ScoredMenu } from '@/app/types';
 
 const RESULT_HEADER: Record<Concept, string> = {
-  boyfriend: '빨리 골라줘서 고마워 자기야ㅎ',
-  mom: '건강한걸로 잘 챙겨먹어!',
+  solo: '오늘은 이거 어때?',
   together: '싫으면 각자 집에 배달시켜놓고 영통이나 해',
 };
 
 const RESULT_IMAGE: Record<Concept, string> = {
-  boyfriend: '/boyfriend-result.png',
-  mom:       '/mom-result.png',
-  together:  '/group-quiz.png',
+  solo:     '/group-quiz.png',
+  together: '/group-quiz.png',
 };
 
 function getKeyword(menu: Menu): string {
@@ -88,7 +86,7 @@ interface ResultViewProps {
   concept?: Concept;
 }
 
-export default function ResultView({ results, showFunnyMessage, shareUrl, onRestart, onRestartQuiz, isDead, concept = 'boyfriend' }: ResultViewProps) {
+export default function ResultView({ results, showFunnyMessage, shareUrl, onRestart, onRestartQuiz, isDead, concept = 'solo' }: ResultViewProps) {
   const [copied, setCopied] = useState(false);
 
   async function handleShare() {
