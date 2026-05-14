@@ -411,8 +411,8 @@ function IntroView({ onStart }: { onStart: () => void }) {
         <div className="flex flex-col items-center gap-6 text-center">
           <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#E50914', fontStyle: 'italic' }}>NETFLIX</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <h1 style={{ fontSize: 26, fontWeight: 900, color: '#fff', lineHeight: 1.2, margin: 0 }}>오늘 뭐볼까?<br />넷플에서 골라봐</h1>
-            <p style={{ fontSize: 13, color: '#666', lineHeight: 1.5 }}>몇 가지 질문으로 딱 맞는 콘텐츠 추려줄게</p>
+            <h1 style={{ fontSize: 26, fontWeight: 900, color: '#fff', lineHeight: 1.2, margin: 0 }}>오늘 뭐볼까?</h1>
+            <p style={{ fontSize: 13, color: '#666', lineHeight: 1.5 }}>뭔가 보고싶은데 뭘 보고싶은지 모르겠다면</p>
           </div>
         </div>
 
