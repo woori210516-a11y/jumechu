@@ -5,6 +5,18 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { RecommendResult } from '@/app/api/netflix/recommend/route';
 
+// ── iOS 네이티브 브리지 타입 ──────────────────────────────────────────────────
+declare global {
+  interface Window {
+    webkit?: {
+      messageHandlers?: {
+        watched?: { postMessage: (data: unknown) => void };
+      };
+    };
+    __setWatchedIds?: (ids: string[]) => void;
+  }
+}
+
 // ── 타입 ─────────────────────────────────────────────────────────────────────
 
 type TagKey =
@@ -167,14 +179,24 @@ const Q8_OPTIONS = [
 // ── 메인 페이지 ────────────────────────────────────────────────────────────────
 
 export default function NetflixPage() {
-  const [view,         setView]         = useState<View>('intro');
-  const [currentStep,  setCurrentStep]  = useState<StepId>('q1');
-  const [stepHistory,  setStepHistory]  = useState<Array<{ step: StepId; survey: SurveyState }>>([]);
-  const [survey,       setSurvey]       = useState<SurveyState>(INITIAL_SURVEY);
-  const [multiTemp,    setMultiTemp]    = useState<string[]>([]);
-  const [results,      setResults]      = useState<RecommendResult[]>([]);
-  const [error,        setError]        = useState<string | null>(null);
-  const [hiddenIds,    setHiddenIds]    = useState<Set<string>>(new Set());
+  const [view,             setView]             = useState<View>('intro');
+  const [currentStep,      setCurrentStep]      = useState<StepId>('q1');
+  const [stepHistory,      setStepHistory]      = useState<Array<{ step: StepId; survey: SurveyState }>>([]);
+  const [survey,           setSurvey]           = useState<SurveyState>(INITIAL_SURVEY);
+  const [multiTemp,        setMultiTemp]        = useState<string[]>([]);
+  const [results,          setResults]          = useState<RecommendResult[]>([]);
+  const [error,            setError]            = useState<string | null>(null);
+  const [hiddenIds,        setHiddenIds]        = useState<Set<string>>(new Set());
+  const [nativeWatchedIds, setNativeWatchedIds] = useState<Set<string>>(new Set());
+
+  // ── iOS 네이티브 브리지 ──────────────────────────────────────────────────────
+  useEffect(() => {
+    // 네이티브에서 저장된 "본 목록" 주입
+    window.__setWatchedIds = (ids: string[]) => {
+      setNativeWatchedIds(new Set(ids));
+    };
+    return () => { delete window.__setWatchedIds; };
+  }, []);
 
   // 멀티셀렉트 스텝 진입 시 초기화 (뒤로가기 지원)
   useEffect(() => {
@@ -381,8 +403,17 @@ export default function NetflixPage() {
           <ResultView
             results={results}
             error={error}
-            hiddenIds={hiddenIds}
-            onHide={id => setHiddenIds(prev => new Set([...prev, id]))}
+            hiddenIds={new Set([...hiddenIds, ...nativeWatchedIds])}
+            onHide={(item) => {
+              setHiddenIds(prev => new Set([...prev, item.id]));
+              // 네이티브 앱이면 SwiftData에도 저장
+              window.webkit?.messageHandlers?.watched?.postMessage({
+                id:          item.id,
+                title:       item.title,
+                posterUrl:   item.poster_url ?? null,
+                contentType: item.content_type ?? null,
+              });
+            }}
             onRestart={resetAll}
           />
         )}
@@ -781,7 +812,7 @@ interface ResultViewProps {
   results: RecommendResult[];
   error: string | null;
   hiddenIds: Set<string>;
-  onHide: (id: string) => void;
+  onHide: (item: RecommendResult) => void;
   onRestart: () => void;
 }
 
@@ -824,7 +855,7 @@ function ResultView({ results, error, hiddenIds, onHide, onRestart }: ResultView
             key={item.id}
             item={item}
             rank={idx + 1}
-            onHide={() => onHide(item.id)}
+            onHide={() => onHide(item)}
           />
         ))}
       </div>
