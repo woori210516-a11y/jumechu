@@ -394,10 +394,10 @@ function IntroView({ onStart }: { onStart: () => void }) {
           <div className="text-5xl font-bold tracking-tight" style={{ color: '#E50914' }}>넷플</div>
           <div className="text-center flex flex-col gap-3">
             <h1 className="text-2xl font-bold leading-tight" style={{ color: '#fff' }}>
-              오늘 뭐볼까?<br />넷플에서 골라봐
+              오늘 뭐 보지?<br />
             </h1>
             <p className="text-sm leading-relaxed" style={{ color: '#888' }}>
-              몇 가지 질문으로 딱 맞는 콘텐츠 추려줄게
+              뭔가 보고 싶은데 뭘 보고싶은지 모르겠다면
             </p>
           </div>
           <div className="flex gap-3">
@@ -700,7 +700,7 @@ function LoadingView() {
           🎬
         </div>
         <div className="flex flex-col items-center gap-2">
-          <p className="text-lg font-bold" style={{ color: '#fff' }}>찾고 있어...</p>
+          <p className="text-lg font-bold" style={{ color: '#fff' }}>찾고 있어요...</p>
           <p className="text-sm" style={{ color: '#888' }}>딱 맞는 콘텐츠 고르는 중</p>
         </div>
         <div className="flex gap-2 pt-2">
@@ -737,7 +737,7 @@ function NoResultView({ onRestart }: { onRestart: () => void }) {
           에휴 그냥<br />유튜브나 보세요..
         </h2>
         <p className="text-sm" style={{ color: '#666' }}>
-          조건에 맞는 콘텐츠를 못 찾겠어
+          조건에 맞는 콘텐츠가 없어요
         </p>
       </div>
       <button
@@ -770,7 +770,7 @@ function ResultView({ results, error, hiddenIds, onHide, onRestart }: ResultView
         <div>
           <h2 className="text-xl font-bold" style={{ color: '#fff' }}>오늘의 추천 🎬</h2>
           <p className="text-xs mt-0.5" style={{ color: '#888' }}>
-            {error ? '오류가 발생했어요' : `${visible.length}개 골라왔어`}
+            {error ? '오류가 발생했어요' : `${visible.length}개 골라왔어요`}
           </p>
         </div>
         <button
