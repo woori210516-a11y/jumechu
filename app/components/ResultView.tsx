@@ -6,7 +6,7 @@ import type { Concept, Menu, ScoredMenu } from '@/app/types';
 
 const RESULT_HEADER: Record<Concept, string> = {
   solo: '오늘은 이거 어때?',
-  together: '다들 동의하면 이걸로 가자',
+  together: '싫으면 라면이나 먹자..',
 };
 
 function getKeyword(menu: Menu): string {
@@ -186,7 +186,7 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
       {showFunnyMessage && (
         <div style={{ background: '#fff8f5', border: '1.5px solid #ffdccc', borderRadius: 10, padding: '12px 14px' }} className="animate-pop">
           <p style={{ fontSize: 12, color: '#FF5C00', fontWeight: 600 }}>
-            다이어트 중인데 술 골랐네.. 오늘 치팅데이야?
+            다이어트 중이지만 술은 마셔야 하는 당신..
           </p>
         </div>
       )}
