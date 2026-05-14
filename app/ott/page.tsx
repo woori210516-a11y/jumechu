@@ -714,9 +714,9 @@ function MultiStep({
         <h2 className="text-xl font-bold leading-snug" style={{ color: '#fff' }}>{title}</h2>
         {subTitle && <p className="text-sm mt-1" style={{ color: '#888' }}>{subTitle}</p>}
       </div>
-      {/* 선택지 영역: 스크롤 가능 */}
+      {/* 선택지 + 버튼을 하나의 스크롤 컨테이너에 넣고, 버튼만 sticky */}
       <div className="overflow-y-auto flex-1 min-h-0">
-        <div className="grid grid-cols-2 gap-2.5 pb-2">
+        <div className="grid grid-cols-2 gap-2.5 pb-4">
           {options.map(opt => {
             const isSelected = selected.includes(opt.value);
             return (
@@ -736,16 +736,18 @@ function MultiStep({
             );
           })}
         </div>
+        {/* 다음 버튼: 스크롤 컨테이너 안에서 하단에 sticky 고정 */}
+        <div style={{ position: 'sticky', bottom: 0, paddingBottom: 4, background: '#141414' }}>
+          <button
+            onClick={onConfirm}
+            disabled={selected.length === 0}
+            className="w-full py-4 rounded-2xl text-white text-base font-bold active:scale-95 transition-transform disabled:opacity-40"
+            style={{ background: '#E50914', boxShadow: selected.length > 0 ? '0 8px 24px rgba(229,9,20,0.3)' : 'none' }}
+          >
+            {confirmLabel}
+          </button>
+        </div>
       </div>
-      {/* 다음 버튼: 스크롤 밖, 항상 하단에 고정 */}
-      <button
-        onClick={onConfirm}
-        disabled={selected.length === 0}
-        className="w-full py-4 rounded-2xl text-white text-base font-bold active:scale-95 transition-transform disabled:opacity-40 shrink-0"
-        style={{ background: '#E50914', boxShadow: selected.length > 0 ? '0 8px 24px rgba(229,9,20,0.3)' : 'none' }}
-      >
-        {confirmLabel}
-      </button>
     </div>
   );
 }
