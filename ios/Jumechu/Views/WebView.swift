@@ -1,35 +1,86 @@
+import Observation
 import SwiftUI
 import WebKit
+
+@Observable
+final class WebViewStore {
+    var webView: WKWebView?
+
+    func load(_ url: URL) {
+        webView?.load(URLRequest(url: url))
+    }
+}
+
+// 웹에서 직접 신호를 보낼 수 있는 화면 상태
+enum WebScreenState {
+    case home, survey, result
+}
 
 struct WebView: UIViewRepresentable {
     let url: URL
     let watchedIds: [String]
     let onWatch: (String, String, String?, String?) -> Void
+    let store: WebViewStore
+    var onScreenState: ((WebScreenState) -> Void)?
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onWatch: onWatch)
+        Coordinator(onWatch: onWatch, store: store, onScreenState: onScreenState)
     }
 
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         let contentController = WKUserContentController()
 
-        // 메모리 누수 방지를 위한 weak 래퍼 사용
+        // history.pushState / replaceState 가로채기 (Next.js SPA 라우팅 감지)
+        let historyScript = WKUserScript(
+            source: """
+            (function() {
+                function _notifyState() {
+                    var path = window.location.pathname;
+                    var search = window.location.search;
+                    var state = 'home';
+                    if (path !== '/') {
+                        state = (path.indexOf('result') !== -1 || search.indexOf('result') !== -1)
+                            ? 'result' : 'survey';
+                    }
+                    window.webkit.messageHandlers.screenState.postMessage(state);
+                }
+                ['pushState','replaceState'].forEach(function(m) {
+                    var orig = history[m];
+                    history[m] = function() {
+                        var r = orig.apply(this, arguments);
+                        setTimeout(_notifyState, 60);
+                        return r;
+                    };
+                });
+                window.addEventListener('popstate', function() { setTimeout(_notifyState, 60); });
+                // 웹에서 직접 호출 가능: window.__nativeUIState('result')
+                window.__nativeUIState = function(s) {
+                    window.webkit.messageHandlers.screenState.postMessage(s);
+                };
+            })();
+            """,
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: true
+        )
+        contentController.addUserScript(historyScript)
+
         let handler = WeakMessageHandler(delegate: context.coordinator)
         contentController.add(handler, name: "watched")
+        contentController.add(handler, name: "screenState")
         config.userContentController = contentController
 
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
         webView.scrollView.contentInsetAdjustmentBehavior = .automatic
         context.coordinator.webView = webView
+        store.webView = webView
 
         webView.load(URLRequest(url: url))
         return webView
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        // watchedIds가 바뀔 때마다 웹에 주입
         context.coordinator.injectWatchedIds(watchedIds)
     }
 
@@ -37,18 +88,41 @@ struct WebView: UIViewRepresentable {
 
     class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         let onWatch: (String, String, String?, String?) -> Void
+        let store: WebViewStore
+        let onScreenState: ((WebScreenState) -> Void)?
         weak var webView: WKWebView?
         private var isPageLoaded = false
         private var pendingIds: [String] = []
 
-        init(onWatch: @escaping (String, String, String?, String?) -> Void) {
+        init(
+            onWatch: @escaping (String, String, String?, String?) -> Void,
+            store: WebViewStore,
+            onScreenState: ((WebScreenState) -> Void)?
+        ) {
             self.onWatch = onWatch
+            self.store = store
+            self.onScreenState = onScreenState
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             isPageLoaded = true
             inject(ids: pendingIds, into: webView)
             pendingIds = []
+            notifyStateFromURL(webView.url)
+        }
+
+        private func notifyStateFromURL(_ url: URL?) {
+            let path = url?.path ?? "/"
+            let query = url?.query ?? ""
+            let state: WebScreenState
+            if path == "/" {
+                state = .home
+            } else if path.contains("result") || query.contains("result") {
+                state = .result
+            } else {
+                state = .survey
+            }
+            DispatchQueue.main.async { self.onScreenState?(state) }
         }
 
         func injectWatchedIds(_ ids: [String]) {
@@ -70,15 +144,20 @@ struct WebView: UIViewRepresentable {
             _ userContentController: WKUserContentController,
             didReceive message: WKScriptMessage
         ) {
+            if message.name == "screenState" {
+                let raw = message.body as? String ?? "home"
+                let state: WebScreenState = raw == "result" ? .result : raw == "survey" ? .survey : .home
+                DispatchQueue.main.async { self.onScreenState?(state) }
+                return
+            }
+
             guard message.name == "watched",
                   let body = message.body as? [String: Any] else { return }
-
             let id = body["id"] as? String ?? ""
             let title = body["title"] as? String ?? ""
             let posterUrl = body["posterUrl"] as? String
             let contentType = body["contentType"] as? String
             guard !id.isEmpty else { return }
-
             DispatchQueue.main.async {
                 self.onWatch(id, title, posterUrl, contentType)
             }

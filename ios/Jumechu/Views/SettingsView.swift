@@ -2,8 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct SettingsView: View {
-    @Query(sort: \WatchedItem.watchedAt, order: .reverse) var watchedItems: [WatchedItem]
-    @Environment(\.modelContext) private var modelContext
+    @Query var watchedItems: [WatchedItem]
 
     private var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
@@ -16,30 +15,24 @@ struct SettingsView: View {
             List {
                 // ── 내가 본 콘텐츠 ─────────────────────────────────
                 Section {
-                    if watchedItems.isEmpty {
+                    NavigationLink {
+                        WatchHistoryView()
+                    } label: {
                         HStack {
+                            Text("내가 본 콘텐츠")
+                                .foregroundColor(.white)
                             Spacer()
-                            VStack(spacing: 10) {
-                                Text("🎬")
-                                    .font(.system(size: 36))
-                                Text("아직 본 콘텐츠가 없어요")
-                                    .font(.system(size: 14))
+                            if !watchedItems.isEmpty {
+                                Text("\(watchedItems.count)")
                                     .foregroundColor(.gray)
+                                    .font(.system(size: 14))
                             }
-                            .padding(.vertical, 24)
-                            Spacer()
                         }
-                        .listRowBackground(Color(hex: "#1f1f1f"))
-                    } else {
-                        ForEach(watchedItems) { item in
-                            WatchedItemRow(item: item)
-                                .listRowBackground(Color(hex: "#1f1f1f"))
-                                .listRowSeparatorTint(Color(hex: "#2a2a2a"))
-                        }
-                        .onDelete(perform: deleteItems)
                     }
+                    .listRowBackground(Color(hex: "#1f1f1f"))
+                    .listRowSeparatorTint(Color(hex: "#2a2a2a"))
                 } header: {
-                    Text("내가 본 콘텐츠")
+                    Text("콘텐츠")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.gray)
                         .textCase(nil)
@@ -68,12 +61,6 @@ struct SettingsView: View {
             .navigationTitle("설정")
         }
     }
-
-    private func deleteItems(at offsets: IndexSet) {
-        for index in offsets {
-            modelContext.delete(watchedItems[index])
-        }
-    }
 }
 
 // MARK: - WatchedItem Row
@@ -83,7 +70,6 @@ struct WatchedItemRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // 포스터
             Group {
                 if let urlStr = item.posterUrl, let url = URL(string: urlStr) {
                     AsyncImage(url: url) { phase in
@@ -101,7 +87,6 @@ struct WatchedItemRow: View {
             .frame(width: 42, height: 60)
             .clipShape(RoundedRectangle(cornerRadius: 6))
 
-            // 정보
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.title)
                     .font(.system(size: 14, weight: .medium))
