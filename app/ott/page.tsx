@@ -14,6 +14,7 @@ declare global {
       };
     };
     __setWatchedIds?: (ids: string[]) => void;
+    __nativeUIState?: (state: 'home' | 'survey' | 'result') => void;
   }
 }
 
@@ -229,6 +230,7 @@ export default function NetflixPage() {
     setResults([]);
     setError(null);
     setHiddenIds(new Set());
+    window.__nativeUIState?.('survey'); // 인트로도 /ott 페이지이므로 survey 상태
   }
 
   function handleStart() {
@@ -304,9 +306,11 @@ export default function NetflixPage() {
       if (data.length === 0 || (data[0]?.match_score ?? 0) < 20) {
         setResults(data);
         setView('no-result');
+        window.__nativeUIState?.('result');
       } else {
         setResults(data);
         setView('result');
+        window.__nativeUIState?.('result');
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -502,7 +506,7 @@ function QuizStepView(p: QuizStepViewProps) {
   const progress = (p.stepNumber / p.totalSteps) * 100;
 
   return (
-    <div className="flex flex-col flex-1 px-5 pt-5 pb-6 gap-5 animate-fade-slide">
+    <div className="flex flex-col h-screen overflow-hidden px-5 pt-5 pb-6 gap-5 animate-fade-slide">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <button
@@ -661,9 +665,9 @@ interface SingleStepProps {
 
 function SingleStep({ title, options, onSelect }: SingleStepProps) {
   return (
-    <div className="flex flex-col gap-5 flex-1 pt-2">
+    <div className="flex flex-col flex-1 pt-2 min-h-0" style={{ gap: 20 }}>
       <h2 className="text-xl font-bold leading-snug" style={{ color: '#fff' }}>{title}</h2>
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-2.5 overflow-y-auto flex-1 min-h-0 pb-2">
         {options.map(opt => (
           <button
             key={opt.label}
@@ -705,35 +709,39 @@ function MultiStep({
   title, subTitle, options, selected, onChange, onConfirm, confirmLabel = '다음',
 }: MultiStepProps) {
   return (
-    <div className="flex flex-col gap-4 flex-1 pt-2">
-      <div>
+    <div className="flex flex-col flex-1 pt-2 min-h-0" style={{ gap: 16 }}>
+      <div className="shrink-0">
         <h2 className="text-xl font-bold leading-snug" style={{ color: '#fff' }}>{title}</h2>
         {subTitle && <p className="text-sm mt-1" style={{ color: '#888' }}>{subTitle}</p>}
       </div>
-      <div className="grid grid-cols-2 gap-2.5 flex-1">
-        {options.map(opt => {
-          const isSelected = selected.includes(opt.value);
-          return (
-            <button
-              key={opt.value}
-              onClick={() => onChange(opt.value)}
-              className="py-4 px-3 rounded-2xl flex flex-col items-center gap-1.5 active:scale-[0.97] transition-all"
-              style={{
-                background: isSelected ? '#2a0a0a' : '#1f1f1f',
-                border: `1px solid ${isSelected ? '#E50914' : '#2a2a2a'}`,
-                color: isSelected ? '#fff' : '#aaa',
-              }}
-            >
-              <span className="text-2xl">{opt.emoji}</span>
-              <span className="text-sm font-medium text-center leading-tight">{opt.label}</span>
-            </button>
-          );
-        })}
+      {/* 선택지 영역: 스크롤 가능 */}
+      <div className="overflow-y-auto flex-1 min-h-0">
+        <div className="grid grid-cols-2 gap-2.5 pb-2">
+          {options.map(opt => {
+            const isSelected = selected.includes(opt.value);
+            return (
+              <button
+                key={opt.value}
+                onClick={() => onChange(opt.value)}
+                className="py-4 px-3 rounded-2xl flex flex-col items-center gap-1.5 active:scale-[0.97] transition-all"
+                style={{
+                  background: isSelected ? '#2a0a0a' : '#1f1f1f',
+                  border: `1px solid ${isSelected ? '#E50914' : '#2a2a2a'}`,
+                  color: isSelected ? '#fff' : '#aaa',
+                }}
+              >
+                <span className="text-2xl">{opt.emoji}</span>
+                <span className="text-sm font-medium text-center leading-tight">{opt.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
+      {/* 다음 버튼: 스크롤 밖, 항상 하단에 고정 */}
       <button
         onClick={onConfirm}
         disabled={selected.length === 0}
-        className="w-full py-4 rounded-2xl text-white text-base font-bold active:scale-95 transition-transform disabled:opacity-40"
+        className="w-full py-4 rounded-2xl text-white text-base font-bold active:scale-95 transition-transform disabled:opacity-40 shrink-0"
         style={{ background: '#E50914', boxShadow: selected.length > 0 ? '0 8px 24px rgba(229,9,20,0.3)' : 'none' }}
       >
         {confirmLabel}
@@ -820,7 +828,7 @@ function ResultView({ results, error, hiddenIds, onHide, onRestart }: ResultView
   const visible = results.filter(r => !hiddenIds.has(r.id));
 
   return (
-    <div className="flex flex-col flex-1 animate-fade-slide">
+    <div className="flex flex-col animate-fade-slide">
       <div className="px-5 pt-5 pb-4 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold" style={{ color: '#fff' }}>오늘의 추천 🎬</h2>
@@ -861,7 +869,8 @@ function ResultView({ results, error, hiddenIds, onHide, onRestart }: ResultView
       </div>
 
       {visible.length > 0 && (
-        <div className="px-5 pb-8 mt-auto">
+        // pb-36: 네이티브 '홈으로 가기' 버튼 공간 확보
+        <div className="px-5 pb-36 pt-2">
           <button
             onClick={onRestart}
             className="w-full py-4 rounded-2xl text-white text-base font-bold active:scale-95 transition-transform"
