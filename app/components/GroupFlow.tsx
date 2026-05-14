@@ -58,14 +58,14 @@ export function GroupPeopleView({ onNext, onBack }: GroupPeopleViewProps) {
           </svg>
           이전
         </button>
-        <span className="text-xs font-semibold text-gray-400 tracking-widest">같이고르기</span>
+        <span className="text-xs font-semibold text-gray-400 tracking-widest">같이 고르기</span>
         <div className="w-10" />
       </div>
 
       <div className="flex flex-col flex-1 items-center justify-center gap-12">
         <div className="text-center">
-          <p className="text-xl font-bold text-gray-900">몇 명이서 먹을 거야?</p>
-          <p className="mt-2 text-gray-400 text-sm">다 같이 골라보자</p>
+          <p className="text-xl font-bold text-gray-900">몇 명이서 먹어요?</p>
+          <p className="mt-2 text-gray-400 text-sm">최대 6명까지</p>
         </div>
 
         <div className="flex items-center gap-10">
@@ -150,12 +150,12 @@ export function GroupInviteView({ roomId, nickname, onStart, onBack }: GroupInvi
         <Image src="/group-main.png" alt="같이고르기" width={200} height={200} className="object-contain" priority />
 
         <div className="text-center">
-          <p className="text-xl font-bold text-gray-900">같이 고르자!</p>
+          <p className="text-xl font-bold text-gray-900">공유하고 같이 골라요</p>
           <p className="mt-2 text-sm text-gray-500">
             내 닉네임:{' '}
             <span className="font-bold text-orange-400">{nickname}</span>
           </p>
-          <p className="mt-1 text-xs text-gray-300">친구한테 링크 보내고 각자 골라봐</p>
+          <p className="mt-1 text-xs text-gray-300">링크를 복사해서 친구에게 공유하세요</p>
         </div>
 
         <div className="w-full flex flex-col gap-3">
@@ -163,7 +163,7 @@ export function GroupInviteView({ roomId, nickname, onStart, onBack }: GroupInvi
             onClick={handleCopy}
             className="w-full py-4 rounded-2xl border border-orange-300 text-orange-400 text-base font-bold active:scale-95 transition-all hover:bg-orange-50"
           >
-            {copied ? '복사됐어! 카톡에 붙여넣으세요' : '링크 복사하기'}
+            {copied ? '복사완료! 카톡에 붙여넣으세요' : '링크 복사하기'}
           </button>
           <button
             onClick={onStart}
