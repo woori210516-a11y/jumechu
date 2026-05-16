@@ -2,8 +2,8 @@ import Link from 'next/link';
 
 export default function Page() {
   return (
-    <main style={{ height: '100vh', display: 'flex', justifyContent: 'center', background: '#0D0D0D' }}>
-      <div style={{ width: '100%', maxWidth: 430, height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <main style={{ height: '100dvh', display: 'flex', justifyContent: 'center', background: '#0D0D0D', overflow: 'hidden' }}>
+      <div style={{ width: '100%', maxWidth: 430, height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* 음식 — 상단 50% */}
         <Link

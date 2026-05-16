@@ -47,8 +47,9 @@ export function GroupPeopleView({ onNext, onBack }: GroupPeopleViewProps) {
   }
 
   return (
-    <div className="flex flex-col flex-1 px-5 pt-5 pb-6 gap-5 animate-fade-slide">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col flex-1 animate-fade-slide" style={{ overflow: 'hidden' }}>
+      {/* 헤더 */}
+      <div className="flex items-center justify-between px-5 pt-5 shrink-0">
         <button
           onClick={onBack}
           className="flex items-center gap-1.5 text-sm text-gray-400 font-medium active:scale-95 transition-all"
@@ -62,14 +63,14 @@ export function GroupPeopleView({ onNext, onBack }: GroupPeopleViewProps) {
         <div className="w-10" />
       </div>
 
-      <div className="flex flex-col flex-1 items-center justify-center gap-12">
+      {/* 콘텐츠 (스크롤 가능) */}
+      <div className="flex flex-col flex-1 items-center justify-center gap-12 overflow-y-auto px-5 py-6">
         <div className="text-center">
           <p className="text-xl font-bold text-gray-900">몇 명이서 먹어요?</p>
           <p className="mt-2 text-gray-400 text-sm">최대 6명까지</p>
         </div>
 
         <div className="flex items-center gap-10">
-          {/* 위 화살표 = 증가, 아래 = 감소 (명수 크게 중앙) */}
           <button
             onClick={() => setCount((c) => Math.max(2, c - 1))}
             disabled={count <= 2}
@@ -81,7 +82,7 @@ export function GroupPeopleView({ onNext, onBack }: GroupPeopleViewProps) {
           </button>
 
           <div className="text-center w-20">
-            <span className="text-7xl font-bold text-orange-400">{count}</span>
+            <span className="text-7xl font-bold" style={{ color: '#FF5C00' }}>{count}</span>
             <p className="text-sm text-gray-400 mt-1">명</p>
           </div>
 
@@ -99,10 +100,19 @@ export function GroupPeopleView({ onNext, onBack }: GroupPeopleViewProps) {
         {error && (
           <p className="text-xs text-red-500 text-center px-2 -mt-6">{error}</p>
         )}
+      </div>
+
+      {/* 하단 고정 버튼 */}
+      <div className="shrink-0 px-5 pb-8 pt-3">
         <button
           onClick={handleNext}
           disabled={loading}
-          className="w-full py-4 rounded-2xl bg-orange-400 text-white text-base font-bold shadow-lg shadow-orange-100 active:scale-95 transition-transform disabled:opacity-50"
+          style={{
+            width: '100%', padding: '14px', borderRadius: 10,
+            background: '#FF5C00', color: '#fff', fontSize: 13, fontWeight: 800,
+            border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
+            opacity: loading ? 0.5 : 1,
+          }}
         >
           {loading ? '방 만드는 중...' : '다음'}
         </button>
@@ -131,8 +141,9 @@ export function GroupInviteView({ roomId, nickname, onStart, onBack }: GroupInvi
   }
 
   return (
-    <div className="flex flex-col flex-1 px-5 pt-5 pb-6 gap-5 animate-fade-slide">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col flex-1 animate-fade-slide" style={{ overflow: 'hidden' }}>
+      {/* 헤더 */}
+      <div className="flex items-center justify-between px-5 pt-5 shrink-0">
         <button
           onClick={onBack}
           className="flex items-center gap-1.5 text-sm text-gray-400 font-medium active:scale-95 transition-all"
@@ -146,32 +157,42 @@ export function GroupInviteView({ roomId, nickname, onStart, onBack }: GroupInvi
         <div className="w-10" />
       </div>
 
-      <div className="flex flex-col flex-1 items-center justify-center gap-8">
+      {/* 콘텐츠 (스크롤 가능) */}
+      <div className="flex flex-col flex-1 items-center justify-center gap-8 overflow-y-auto px-5 py-6">
         <Image src="/group-main.png" alt="같이고르기" width={200} height={200} className="object-contain" priority />
 
         <div className="text-center">
           <p className="text-xl font-bold text-gray-900">공유하고 같이 골라요</p>
           <p className="mt-2 text-sm text-gray-500">
             내 닉네임:{' '}
-            <span className="font-bold text-orange-400">{nickname}</span>
+            <span className="font-bold" style={{ color: '#FF5C00' }}>{nickname}</span>
           </p>
           <p className="mt-1 text-xs text-gray-300">링크를 복사해서 친구에게 공유하세요</p>
         </div>
+      </div>
 
-        <div className="w-full flex flex-col gap-3">
-          <button
-            onClick={handleCopy}
-            className="w-full py-4 rounded-2xl border border-orange-300 text-orange-400 text-base font-bold active:scale-95 transition-all hover:bg-orange-50"
-          >
-            {copied ? '복사완료! 카톡에 붙여넣으세요' : '링크 복사하기'}
-          </button>
-          <button
-            onClick={onStart}
-            className="w-full py-4 rounded-2xl bg-orange-400 text-white text-base font-bold shadow-lg shadow-orange-100 active:scale-95 transition-transform"
-          >
-            시작하기
-          </button>
-        </div>
+      {/* 하단 고정 버튼 */}
+      <div className="shrink-0 px-5 pb-8 pt-3 flex flex-col gap-3">
+        <button
+          onClick={handleCopy}
+          style={{
+            width: '100%', padding: '14px', borderRadius: 10,
+            border: '1.5px solid #FF5C00', background: '#fff',
+            fontSize: 13, fontWeight: 800, color: '#FF5C00', cursor: 'pointer',
+          }}
+        >
+          {copied ? '복사됐어! 카톡에 붙여넣으세요' : '링크 복사하기'}
+        </button>
+        <button
+          onClick={onStart}
+          style={{
+            width: '100%', padding: '14px', borderRadius: 10,
+            background: '#FF5C00', color: '#fff', fontSize: 13, fontWeight: 800,
+            border: 'none', cursor: 'pointer',
+          }}
+        >
+          시작하기
+        </button>
       </div>
     </div>
   );
@@ -238,9 +259,9 @@ export function GroupWaitingView({
   const slots = Array.from({ length: maxMembers }, (_, i) => participants[i] ?? null);
 
   return (
-    <div className="flex flex-col flex-1 px-5 pt-7 pb-6 gap-4 animate-fade-slide">
+    <div className="flex flex-col flex-1 animate-fade-slide" style={{ overflow: 'hidden' }}>
       {/* 헤더 */}
-      <div className="text-center">
+      <div className="text-center px-5 pt-7 pb-4 shrink-0">
         <p className="text-xs text-gray-400 font-medium tracking-widest">같이고르기</p>
         <p className="text-lg font-bold text-gray-800 mt-1">
           {allCompleted
@@ -251,48 +272,55 @@ export function GroupWaitingView({
         </p>
       </div>
 
-      {/* 참여자 카드 */}
-      <div className="flex flex-col gap-2">
-        {slots.map((p, i) => (
-          <div
-            key={i}
-            className={`rounded-2xl px-4 py-3 flex items-center justify-between border ${
-              p?.completed
-                ? 'bg-orange-50 border-orange-200'
-                : 'bg-gray-50 border-gray-100'
-            }`}
-          >
-            {p ? (
-              <>
-                <span className="font-semibold text-gray-700 text-sm">{p.nickname}</span>
-                <span className={`text-sm ${p.completed ? 'font-bold text-orange-500' : 'text-gray-400'}`}>
-                  {p.completed ? (
-                    p.result
-                  ) : (
-                    <>
-                      고르는 중<DotsLoader />
-                    </>
-                  )}
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="text-gray-300 text-sm">아직 안 들어왔어</span>
-                <span className="text-xs text-gray-200 bg-gray-100 px-2 py-0.5 rounded-full">
-                  미입장
-                </span>
-              </>
-            )}
-          </div>
-        ))}
+      {/* 참여자 카드 (스크롤 가능) */}
+      <div className="flex-1 overflow-y-auto px-5">
+        <div className="flex flex-col gap-2 pb-4">
+          {slots.map((p, i) => (
+            <div
+              key={i}
+              className={`rounded-2xl px-4 py-3 flex items-center justify-between border ${
+                p?.completed
+                  ? 'bg-orange-50 border-orange-200'
+                  : 'bg-gray-50 border-gray-100'
+              }`}
+            >
+              {p ? (
+                <>
+                  <span className="font-semibold text-gray-700 text-sm">{p.nickname}</span>
+                  <span className={`text-sm ${p.completed ? 'font-bold text-orange-500' : 'text-gray-400'}`}>
+                    {p.completed ? (
+                      p.result
+                    ) : (
+                      <>
+                        고르는 중<DotsLoader />
+                      </>
+                    )}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="text-gray-300 text-sm">아직 안 들어왔어</span>
+                  <span className="text-xs text-gray-200 bg-gray-100 px-2 py-0.5 rounded-full">
+                    미입장
+                  </span>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* 랜덤뽑기 버튼 */}
-      <div className="mt-auto pt-2">
+      {/* 하단 고정 버튼 */}
+      <div className="shrink-0 px-5 pb-8 pt-3">
         <button
           onClick={handlePickRandom}
           disabled={!allCompleted || isPicking}
-          className="w-full py-4 rounded-2xl bg-orange-400 text-white font-bold text-base shadow-lg shadow-orange-100 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all"
+          style={{
+            width: '100%', padding: '14px', borderRadius: 10,
+            background: '#FF5C00', color: '#fff', fontSize: 13, fontWeight: 800,
+            border: 'none', cursor: (!allCompleted || isPicking) ? 'not-allowed' : 'pointer',
+            opacity: (!allCompleted || isPicking) ? 0.4 : 1,
+          }}
         >
           {isPicking
             ? '뽑는 중...'
