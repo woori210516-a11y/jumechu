@@ -107,18 +107,16 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
           <p style={{ fontSize: 22, fontWeight: 900, color: '#1a1a1a', marginTop: 10 }}>육개장</p>
           <p style={{ fontSize: 12, color: '#999', marginTop: 4 }}>故人의 마지막 식사.. 맛있게 드세요</p>
         </div>
-        <div style={{ marginTop: 'auto' }}>
-          <button
-            onClick={onRestartQuiz ?? onRestart}
-            style={{
-              width: '100%', padding: '14px', borderRadius: 10,
-              border: '1.5px solid #ebebeb', background: '#fff',
-              fontSize: 13, fontWeight: 600, color: '#555', cursor: 'pointer',
-            }}
-          >
-            다시 고르기
-          </button>
-        </div>
+        <button
+          onClick={onRestartQuiz ?? onRestart}
+          style={{
+            width: '100%', padding: '14px', borderRadius: 10,
+            border: '1.5px solid #ebebeb', background: '#fff',
+            fontSize: 13, fontWeight: 600, color: '#555', cursor: 'pointer',
+          }}
+        >
+          다시 고르기
+        </button>
       </div>
     );
   }
@@ -223,7 +221,7 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
       )}
 
       {/* 하단 버튼 */}
-      <div style={{ marginTop: 'auto', paddingTop: 8, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ paddingTop: 4, display: 'flex', flexDirection: 'column', gap: 10 }}>
         {shareUrl && (
           <button
             onClick={handleShare}

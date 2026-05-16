@@ -442,6 +442,16 @@ interface QuizViewProps {
 
 function QuizView({ question, questionNumber, total, multiSelect, onSingleAnswer, onToggleMulti, onMultiConfirm, onBack }: QuizViewProps) {
   const progress = (questionNumber / total) * 100;
+  const [pickedOption, setPickedOption] = useState<string | null>(null);
+
+  // 질문이 바뀌면 포커스 초기화
+  useEffect(() => { setPickedOption(null); }, [question.id]);
+
+  function handleSinglePick(option: string) {
+    if (pickedOption) return; // 중복 클릭 방지
+    setPickedOption(option);
+    setTimeout(() => onSingleAnswer(option), 150);
+  }
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#fff' }} className="animate-fade-slide">
@@ -476,21 +486,32 @@ function QuizView({ question, questionNumber, total, multiSelect, onSingleAnswer
       {question.type === 'single' ? (
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 32px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {question.options.map((option) => (
-              <button
-                key={option}
-                onClick={() => onSingleAnswer(option)}
-                style={{
-                  width: '100%', padding: '11px 14px', borderRadius: 10,
-                  border: '1.5px solid #ebebeb', background: '#fff',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  cursor: 'pointer', transition: 'all 150ms', textAlign: 'left',
-                }}
-              >
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#222' }}>{option}</span>
-                <div style={{ width: 18, height: 18, borderRadius: '50%', border: '1.5px solid #ddd', flexShrink: 0 }} />
-              </button>
-            ))}
+            {question.options.map((option) => {
+              const picked = pickedOption === option;
+              return (
+                <button
+                  key={option}
+                  onClick={() => handleSinglePick(option)}
+                  style={{
+                    width: '100%', padding: '11px 14px', borderRadius: 10,
+                    border: `1.5px solid ${picked ? '#FF5C00' : '#ebebeb'}`,
+                    background: picked ? '#fff8f5' : '#fff',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    cursor: 'pointer', transition: 'all 150ms', textAlign: 'left',
+                  }}
+                >
+                  <span style={{ fontSize: 13, fontWeight: 600, color: picked ? '#FF5C00' : '#222', flex: 1 }}>{option}</span>
+                  <div style={{
+                    width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+                    background: picked ? '#FF5C00' : 'transparent',
+                    border: picked ? 'none' : '1.5px solid #ddd',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {picked && <span style={{ color: '#fff', fontSize: 10, fontWeight: 700, lineHeight: 1 }}>✓</span>}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       ) : (
