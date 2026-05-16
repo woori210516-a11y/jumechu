@@ -473,7 +473,6 @@ function QuizStepView(p: QuizStepViewProps) {
             </svg>
             이전
           </button>
-          <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.5px' }}>Q{p.stepNumber} / {p.totalSteps}</span>
         </div>
 
         <div style={{ height: 2, background: '#222', borderRadius: 2, marginBottom: 20 }}>
