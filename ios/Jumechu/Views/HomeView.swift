@@ -41,19 +41,19 @@ struct HomeView: View {
                         Image(systemName: "gearshape.fill")
                             .font(.system(size: 17))
                             .foregroundColor(.white)
-                            .frame(width: 36, height: 36)
-                            .background(Color.black.opacity(0.5))
-                            .clipShape(Circle())
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
                     }
                 case .survey, .result:
                     Button(action: { webStore.load(webURL) }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(.white)
-                            .frame(width: 36, height: 36)
-                            .background(Color.black.opacity(0.6))
-                            .clipShape(Circle())
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
                     }
+                case .netflixResult:
+                    EmptyView() // 하단 '홈으로 가기' 버튼과 중복되므로 X 숨김
                 }
             }
             .padding(.trailing, 16)
@@ -61,7 +61,7 @@ struct HomeView: View {
         }
         // 결과화면 하단 '홈으로 가기' 버튼
         .overlay(alignment: .bottom) {
-            if screenState == .result {
+            if screenState == .result || screenState == .netflixResult {
                 Button(action: { webStore.load(webURL) }) {
                     Text("홈으로 가기")
                         .font(.system(size: 16, weight: .semibold))

@@ -13,7 +13,7 @@ final class WebViewStore {
 
 // 웹에서 직접 신호를 보낼 수 있는 화면 상태
 enum WebScreenState {
-    case home, survey, result
+    case home, survey, result, netflixResult
 }
 
 struct WebView: UIViewRepresentable {
@@ -114,11 +114,12 @@ struct WebView: UIViewRepresentable {
         private func notifyStateFromURL(_ url: URL?) {
             let path = url?.path ?? "/"
             let query = url?.query ?? ""
+            let isOtt = path.hasPrefix("/ott")
             let state: WebScreenState
             if path == "/" {
                 state = .home
             } else if path.contains("result") || query.contains("result") {
-                state = .result
+                state = isOtt ? .netflixResult : .result
             } else {
                 state = .survey
             }
@@ -146,7 +147,14 @@ struct WebView: UIViewRepresentable {
         ) {
             if message.name == "screenState" {
                 let raw = message.body as? String ?? "home"
-                let state: WebScreenState = raw == "result" ? .result : raw == "survey" ? .survey : .home
+                let path = webView?.url?.path ?? ""
+                let isOtt = path.hasPrefix("/ott")
+                let state: WebScreenState
+                switch raw {
+                case "result":  state = isOtt ? .netflixResult : .result
+                case "survey":  state = .survey
+                default:        state = .home
+                }
                 DispatchQueue.main.async { self.onScreenState?(state) }
                 return
             }
