@@ -458,7 +458,6 @@ function QuizView({ question, questionNumber, total, multiSelect, onSingleAnswer
             </svg>
             이전
           </button>
-          <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.5px' }}>Q{questionNumber} / {total}</span>
         </div>
 
         {/* 프로그레스바 */}
