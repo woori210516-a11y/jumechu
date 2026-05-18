@@ -92,31 +92,35 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
   // 이미사망 특별 화면
   if (isDead) {
     return (
-      <div className="flex flex-col flex-1 px-5 pt-10 pb-8 gap-6 animate-fade-slide" style={{ background: '#fff' }}>
-        <div className="flex flex-col items-center gap-4">
-          <Image src="/dead.png" alt="이미사망" width={180} height={180} className="object-contain" priority />
-          <div className="text-center">
-            <p style={{ fontSize: 17, fontWeight: 800, color: '#1a1a1a' }}>과로로 사망하셨습니다</p>
-            <p style={{ marginTop: 4, fontSize: 12, color: '#999' }}>다음 생에는 건물주로 태어나시길</p>
+      <div className="flex flex-col flex-1 animate-fade-slide" style={{ background: '#fff', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '40px 20px 16px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div className="flex flex-col items-center gap-4">
+            <Image src="/dead.png" alt="이미사망" width={180} height={180} className="object-contain" priority />
+            <div className="text-center">
+              <p style={{ fontSize: 17, fontWeight: 800, color: '#1a1a1a' }}>과로로 사망하셨습니다</p>
+              <p style={{ marginTop: 4, fontSize: 12, color: '#999' }}>다음 생에는 건물주로 태어나시길</p>
+            </div>
+          </div>
+          <div style={{ border: '1.5px solid #ebebeb', borderRadius: 12, padding: '18px 20px' }} className="animate-pop">
+            <span style={{ fontSize: 11, fontWeight: 600, color: '#FF5C00', background: '#fff8f5', padding: '3px 8px', borderRadius: 6 }}>
+              영결식 추천 메뉴
+            </span>
+            <p style={{ fontSize: 22, fontWeight: 900, color: '#1a1a1a', marginTop: 10 }}>육개장</p>
+            <p style={{ fontSize: 12, color: '#999', marginTop: 4 }}>故人의 마지막 식사.. 맛있게 드세요</p>
           </div>
         </div>
-        <div style={{ border: '1.5px solid #ebebeb', borderRadius: 12, padding: '18px 20px' }} className="animate-pop">
-          <span style={{ fontSize: 11, fontWeight: 600, color: '#FF5C00', background: '#fff8f5', padding: '3px 8px', borderRadius: 6 }}>
-            영결식 추천 메뉴
-          </span>
-          <p style={{ fontSize: 22, fontWeight: 900, color: '#1a1a1a', marginTop: 10 }}>육개장</p>
-          <p style={{ fontSize: 12, color: '#999', marginTop: 4 }}>故人의 마지막 식사.. 맛있게 드세요</p>
+        <div className="shrink-0" style={{ padding: '12px 20px 24px', background: '#fff' }}>
+          <button
+            onClick={onRestartQuiz ?? onRestart}
+            style={{
+              width: '100%', padding: '14px', borderRadius: 10,
+              border: '1.5px solid #ebebeb', background: '#fff',
+              fontSize: 13, fontWeight: 600, color: '#555', cursor: 'pointer',
+            }}
+          >
+            다시 고르기
+          </button>
         </div>
-        <button
-          onClick={onRestartQuiz ?? onRestart}
-          style={{
-            width: '100%', padding: '14px', borderRadius: 10,
-            border: '1.5px solid #ebebeb', background: '#fff',
-            fontSize: 13, fontWeight: 600, color: '#555', cursor: 'pointer',
-          }}
-        >
-          다시 고르기
-        </button>
       </div>
     );
   }
@@ -124,24 +128,26 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
   // 결과 없음
   if (results.length === 0) {
     return (
-      <div className="flex flex-col flex-1 items-center justify-center px-6 gap-8 animate-fade-slide" style={{ background: '#fff' }}>
-        <div className="flex flex-col items-center gap-5">
+      <div className="flex flex-col flex-1 animate-fade-slide" style={{ background: '#fff', overflow: 'hidden' }}>
+        <div className="flex flex-col items-center justify-center" style={{ flex: 1, overflowY: 'auto', padding: '24px', gap: 20 }}>
           <Image src="/none.png" alt="결과없음" width={180} height={180} className="object-contain" priority />
           <div className="text-center">
             <p style={{ fontSize: 18, fontWeight: 800, color: '#1a1a1a' }}>이것도 싫고 저것도 싫으면</p>
             <p style={{ fontSize: 18, fontWeight: 800, color: '#1a1a1a' }}>뭘 드시겠다는..?</p>
           </div>
         </div>
-        <button
-          onClick={onRestartQuiz ?? onRestart}
-          style={{
-            width: '100%', padding: '14px', borderRadius: 10,
-            background: '#FF5C00', color: '#fff', fontSize: 13, fontWeight: 800,
-            border: 'none', cursor: 'pointer',
-          }}
-        >
-          다시 제대로 고르기
-        </button>
+        <div className="shrink-0" style={{ padding: '12px 20px 24px', background: '#fff' }}>
+          <button
+            onClick={onRestartQuiz ?? onRestart}
+            style={{
+              width: '100%', padding: '14px', borderRadius: 10,
+              background: '#FF5C00', color: '#fff', fontSize: 13, fontWeight: 800,
+              border: 'none', cursor: 'pointer',
+            }}
+          >
+            다시 제대로 고르기
+          </button>
+        </div>
       </div>
     );
   }
@@ -149,24 +155,26 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
   // 최고 점수 2점 이하
   if (results[0].score <= 2) {
     return (
-      <div className="flex flex-col flex-1 items-center justify-center px-6 gap-8 animate-fade-slide" style={{ background: '#fff' }}>
-        <div className="flex flex-col items-center gap-5">
+      <div className="flex flex-col flex-1 animate-fade-slide" style={{ background: '#fff', overflow: 'hidden' }}>
+        <div className="flex flex-col items-center justify-center" style={{ flex: 1, overflowY: 'auto', padding: '24px', gap: 20 }}>
           <Image src="/hungry.png" alt="햇반" width={180} height={180} className="object-contain" priority />
           <div className="text-center">
             <p style={{ fontSize: 18, fontWeight: 800, color: '#1a1a1a' }}>오늘은 그냥 햇반이나 드세요</p>
             <p style={{ marginTop: 6, fontSize: 12, color: '#999' }}>아님 걍 굶던가..</p>
           </div>
         </div>
-        <button
-          onClick={onRestart}
-          style={{
-            width: '100%', padding: '14px', borderRadius: 10,
-            border: '1.5px solid #FF5C00', background: '#fff',
-            fontSize: 13, fontWeight: 600, color: '#FF5C00', cursor: 'pointer',
-          }}
-        >
-          다시 고르기
-        </button>
+        <div className="shrink-0" style={{ padding: '12px 20px 24px', background: '#fff' }}>
+          <button
+            onClick={onRestart}
+            style={{
+              width: '100%', padding: '14px', borderRadius: 10,
+              border: '1.5px solid #FF5C00', background: '#fff',
+              fontSize: 13, fontWeight: 600, color: '#FF5C00', cursor: 'pointer',
+            }}
+          >
+            다시 고르기
+          </button>
+        </div>
       </div>
     );
   }
@@ -174,54 +182,57 @@ export default function ResultView({ results, showFunnyMessage, shareUrl, onRest
   const [first, second, third] = results;
 
   return (
-    <div className="flex flex-col flex-1 px-5 pt-7 pb-8 gap-5 animate-fade-slide" style={{ background: '#fff' }}>
-      {/* 헤더 */}
-      <div>
-        <p style={{ fontSize: 11, color: '#999', fontWeight: 600 }}>오늘의 메뉴 추천</p>
-        <p style={{ fontSize: 16, fontWeight: 800, color: '#1a1a1a', marginTop: 3 }}>{RESULT_HEADER[concept]}</p>
-      </div>
-
-      {showFunnyMessage && (
-        <div style={{ background: '#fff8f5', border: '1.5px solid #ffdccc', borderRadius: 10, padding: '12px 14px' }} className="animate-pop">
-          <p style={{ fontSize: 12, color: '#FF5C00', fontWeight: 600 }}>
-            다이어트 중이지만 술은 마셔야 하는 당신..
-          </p>
+    <div className="flex flex-col flex-1 animate-fade-slide" style={{ background: '#fff', overflow: 'hidden' }}>
+      {/* 스크롤 가능 콘텐츠 */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '28px 20px 16px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {/* 헤더 */}
+        <div>
+          <p style={{ fontSize: 11, color: '#999', fontWeight: 600 }}>오늘의 메뉴 추천</p>
+          <p style={{ fontSize: 16, fontWeight: 800, color: '#1a1a1a', marginTop: 3 }}>{RESULT_HEADER[concept]}</p>
         </div>
-      )}
 
-      {/* 1위 카드 */}
-      <div style={{ border: '1.5px solid #ebebeb', borderRadius: 12, padding: '18px 20px' }} className="animate-pop">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#FF5C00', background: '#fff8f5', padding: '3px 8px', borderRadius: 6 }}>1위</span>
-          {first.score > 0 && <span style={{ fontSize: 11, color: '#ccc' }}>점수 {first.score}</span>}
-        </div>
-        <p style={{ fontSize: 22, fontWeight: 900, color: '#1a1a1a', margin: 0 }}>{first.menu.name}</p>
-        <p style={{ fontSize: 12, color: '#999', marginTop: 4 }}>오늘은 {first.menu.name} 어때?</p>
-        {first.menu.subItems && first.menu.subItems.length > 0 && (
-          <div style={{ marginTop: 10, background: '#f9f9f9', borderRadius: 8, padding: '8px 12px' }}>
-            <p style={{ fontSize: 12, color: '#555' }}>{first.menu.subItems.join(', ')} 중에 골라봐</p>
+        {showFunnyMessage && (
+          <div style={{ background: '#fff8f5', border: '1.5px solid #ffdccc', borderRadius: 10, padding: '12px 14px' }} className="animate-pop">
+            <p style={{ fontSize: 12, color: '#FF5C00', fontWeight: 600 }}>
+              다이어트 중이지만 술은 마셔야 하는 당신..
+            </p>
           </div>
         )}
-        <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 11, color: '#FF5C00', background: '#fff8f5', padding: '3px 8px', borderRadius: 6 }}>{first.menu.category}</span>
-          <span style={{ fontSize: 11, color: '#999', background: '#f5f5f5', padding: '3px 8px', borderRadius: 6 }}>다이어트 {first.menu.diet}</span>
+
+        {/* 1위 카드 */}
+        <div style={{ border: '1.5px solid #ebebeb', borderRadius: 12, padding: '18px 20px' }} className="animate-pop">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#FF5C00', background: '#fff8f5', padding: '3px 8px', borderRadius: 6 }}>1위</span>
+            {first.score > 0 && <span style={{ fontSize: 11, color: '#ccc' }}>점수 {first.score}</span>}
+          </div>
+          <p style={{ fontSize: 22, fontWeight: 900, color: '#1a1a1a', margin: 0 }}>{first.menu.name}</p>
+          <p style={{ fontSize: 12, color: '#999', marginTop: 4 }}>오늘은 {first.menu.name} 어때?</p>
+          {first.menu.subItems && first.menu.subItems.length > 0 && (
+            <div style={{ marginTop: 10, background: '#f9f9f9', borderRadius: 8, padding: '8px 12px' }}>
+              <p style={{ fontSize: 12, color: '#555' }}>{first.menu.subItems.join(', ')} 중에 골라봐</p>
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 11, color: '#FF5C00', background: '#fff8f5', padding: '3px 8px', borderRadius: 6 }}>{first.menu.category}</span>
+            <span style={{ fontSize: 11, color: '#999', background: '#f5f5f5', padding: '3px 8px', borderRadius: 6 }}>다이어트 {first.menu.diet}</span>
+          </div>
+          <MapButtons menu={first.menu} />
         </div>
-        <MapButtons menu={first.menu} />
+
+        {/* 2·3위 */}
+        {(second || third) && (
+          <div>
+            <p style={{ fontSize: 11, color: '#999', fontWeight: 600, marginBottom: 10 }}>다른 선택지</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {second && <AlternativeCard rank={2} item={second} />}
+              {third && <AlternativeCard rank={3} item={third} />}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* 2·3위 */}
-      {(second || third) && (
-        <div>
-          <p style={{ fontSize: 11, color: '#999', fontWeight: 600, marginBottom: 10 }}>다른 선택지</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {second && <AlternativeCard rank={2} item={second} />}
-            {third && <AlternativeCard rank={3} item={third} />}
-          </div>
-        </div>
-      )}
-
-      {/* 하단 버튼 */}
-      <div style={{ paddingTop: 4, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {/* 하단 고정 버튼 */}
+      <div className="shrink-0" style={{ padding: '12px 20px 24px', background: '#fff', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {shareUrl && (
           <button
             onClick={handleShare}

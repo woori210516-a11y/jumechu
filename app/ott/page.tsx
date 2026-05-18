@@ -394,8 +394,8 @@ export default function NetflixPage() {
 
 function IntroView({ onStart }: { onStart: () => void }) {
   return (
-    <div className="flex flex-col flex-1 animate-fade-slide" style={{ background: '#0D0D0D' }}>
-      <div style={{ padding: '20px 20px 0' }}>
+    <div className="flex flex-col flex-1 animate-fade-slide" style={{ background: '#0D0D0D', overflow: 'hidden' }}>
+      <div className="shrink-0" style={{ padding: '20px 20px 0' }}>
         <Link
           href="/"
           style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#666', textDecoration: 'none' }}
@@ -407,7 +407,7 @@ function IntroView({ onStart }: { onStart: () => void }) {
         </Link>
       </div>
 
-      <div className="flex flex-col flex-1 items-center justify-center px-6 gap-10">
+      <div className="flex flex-col items-center justify-center" style={{ flex: 1, overflowY: 'auto', padding: '0 24px' }}>
         <div className="flex flex-col items-center gap-6 text-center">
           <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#E50914', fontStyle: 'italic' }}>NETFLIX</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -415,20 +415,20 @@ function IntroView({ onStart }: { onStart: () => void }) {
             <p style={{ fontSize: 13, color: '#666', lineHeight: 1.5 }}>뭔가 보고싶은데 뭘 보고싶은지 모르겠다면</p>
           </div>
         </div>
+      </div>
 
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button
-            onClick={onStart}
-            style={{
-              width: '100%', padding: '14px', borderRadius: 10,
-              background: '#E50914', color: '#fff', fontSize: 13, fontWeight: 800,
-              border: 'none', cursor: 'pointer', transition: 'all 150ms',
-            }}
-          >
-            시작하기
-          </button>
-          <p style={{ textAlign: 'center', fontSize: 11, color: '#555' }}>1분 이내</p>
-        </div>
+      <div className="shrink-0" style={{ padding: '12px 20px 24px', background: '#0D0D0D', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <button
+          onClick={onStart}
+          style={{
+            width: '100%', padding: '14px', borderRadius: 10,
+            background: '#E50914', color: '#fff', fontSize: 13, fontWeight: 800,
+            border: 'none', cursor: 'pointer', transition: 'all 150ms',
+          }}
+        >
+          시작하기
+        </button>
+        <p style={{ textAlign: 'center', fontSize: 11, color: '#555' }}>1분 이내</p>
       </div>
     </div>
   );
@@ -734,24 +734,26 @@ function LoadingView() {
 
 function NoResultView({ onRestart }: { onRestart: () => void }) {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center gap-8 px-6 animate-fade-slide">
-      <div className="flex flex-col items-center gap-4 text-center">
+    <div className="flex flex-col flex-1 animate-fade-slide" style={{ overflow: 'hidden' }}>
+      <div className="flex flex-col items-center justify-center text-center" style={{ flex: 1, overflowY: 'auto', padding: '24px', gap: 16 }}>
         <span style={{ fontSize: 52 }}>📺</span>
         <div>
           <h2 style={{ fontSize: 18, fontWeight: 800, color: '#fff', lineHeight: 1.3, margin: 0 }}>에휴 그냥<br />유튜브나 보세요..</h2>
           <p style={{ fontSize: 12, color: '#666', marginTop: 8 }}>조건에 맞는 콘텐츠를 못 찾겠어</p>
         </div>
       </div>
-      <button
-        onClick={onRestart}
-        style={{
-          width: '100%', padding: '14px', borderRadius: 10,
-          background: '#E50914', color: '#fff', fontSize: 13, fontWeight: 800,
-          border: 'none', cursor: 'pointer',
-        }}
-      >
-        다시 고르기
-      </button>
+      <div className="shrink-0" style={{ padding: '12px 20px 24px', background: '#0D0D0D' }}>
+        <button
+          onClick={onRestart}
+          style={{
+            width: '100%', padding: '14px', borderRadius: 10,
+            background: '#E50914', color: '#fff', fontSize: 13, fontWeight: 800,
+            border: 'none', cursor: 'pointer',
+          }}
+        >
+          다시 고르기
+        </button>
+      </div>
     </div>
   );
 }

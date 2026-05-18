@@ -344,24 +344,26 @@ export default function MenuPage() {
 
 function RoomErrorView({ title, sub, onBack }: { title: string; sub: string; onBack: () => void }) {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center px-6 gap-8 animate-fade-slide">
-      <div className="flex flex-col items-center gap-5">
+    <div className="flex flex-col flex-1 animate-fade-slide" style={{ overflow: 'hidden' }}>
+      <div className="flex flex-col items-center justify-center" style={{ flex: 1, overflowY: 'auto', padding: '24px', gap: 20 }}>
         <Image src="/hungry.png" alt="오류" width={180} height={180} className="object-contain" priority />
         <div className="text-center">
           <p style={{ fontSize: 18, fontWeight: 800, color: '#1a1a1a' }}>{title}</p>
           <p style={{ marginTop: 6, fontSize: 13, color: '#999', lineHeight: 1.5 }}>{sub}</p>
         </div>
       </div>
-      <button
-        onClick={onBack}
-        style={{
-          width: '100%', padding: '14px', borderRadius: 10,
-          background: '#FF5C00', color: '#fff', fontSize: 13, fontWeight: 800,
-          border: 'none', cursor: 'pointer',
-        }}
-      >
-        처음으로
-      </button>
+      <div className="shrink-0" style={{ padding: '12px 20px 24px', background: '#fff' }}>
+        <button
+          onClick={onBack}
+          style={{
+            width: '100%', padding: '14px', borderRadius: 10,
+            background: '#FF5C00', color: '#fff', fontSize: 13, fontWeight: 800,
+            border: 'none', cursor: 'pointer',
+          }}
+        >
+          처음으로
+        </button>
+      </div>
     </div>
   );
 }
@@ -370,8 +372,8 @@ function RoomErrorView({ title, sub, onBack }: { title: string; sub: string; onB
 
 function IntroView({ onSolo, onTogether }: { onSolo: () => void; onTogether: () => void }) {
   return (
-    <div className="flex flex-col flex-1 animate-fade-slide" style={{ background: '#fff' }}>
-      <div style={{ padding: '20px 20px 0' }}>
+    <div className="flex flex-col flex-1 animate-fade-slide" style={{ background: '#fff', overflow: 'hidden' }}>
+      <div className="shrink-0" style={{ padding: '20px 20px 0' }}>
         <Link
           href="/"
           style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#999', textDecoration: 'none' }}
@@ -383,7 +385,7 @@ function IntroView({ onSolo, onTogether }: { onSolo: () => void; onTogether: () 
         </Link>
       </div>
 
-      <div className="flex flex-col flex-1 items-center justify-center px-6 gap-10">
+      <div className="flex flex-col items-center justify-center" style={{ flex: 1, overflowY: 'auto', padding: '0 24px' }}>
         <div className="flex flex-col items-center gap-5">
           <Image
             src="/group-main.png"
@@ -398,30 +400,30 @@ function IntroView({ onSolo, onTogether }: { onSolo: () => void; onTogether: () 
             <p style={{ marginTop: 8, fontSize: 13, color: '#999' }}>혼자 고를지, 같이 고를지 선택하기</p>
           </div>
         </div>
+      </div>
 
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button
-            onClick={onSolo}
-            style={{
-              width: '100%', padding: '14px', borderRadius: 10,
-              background: '#FF5C00', color: '#fff', fontSize: 13, fontWeight: 800,
-              border: 'none', cursor: 'pointer', transition: 'all 150ms',
-            }}
-          >
-            혼자 고르기
-          </button>
-          <button
-            onClick={onTogether}
-            style={{
-              width: '100%', padding: '14px', borderRadius: 10,
-              background: '#fff', color: '#FF5C00', fontSize: 13, fontWeight: 800,
-              border: '1.5px solid #FF5C00', cursor: 'pointer', transition: 'all 150ms',
-            }}
-          >
-            같이 고르기
-          </button>
-          <p style={{ textAlign: 'center', fontSize: 11, color: '#999', marginTop: 2 }}>총 10여 가지 질문 · 1분 이내</p>
-        </div>
+      <div className="shrink-0" style={{ padding: '12px 20px 24px', background: '#fff', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <button
+          onClick={onSolo}
+          style={{
+            width: '100%', padding: '14px', borderRadius: 10,
+            background: '#FF5C00', color: '#fff', fontSize: 13, fontWeight: 800,
+            border: 'none', cursor: 'pointer', transition: 'all 150ms',
+          }}
+        >
+          혼자 고르기
+        </button>
+        <button
+          onClick={onTogether}
+          style={{
+            width: '100%', padding: '14px', borderRadius: 10,
+            background: '#fff', color: '#FF5C00', fontSize: 13, fontWeight: 800,
+            border: '1.5px solid #FF5C00', cursor: 'pointer', transition: 'all 150ms',
+          }}
+        >
+          같이 고르기
+        </button>
+        <p style={{ textAlign: 'center', fontSize: 11, color: '#999', marginTop: 2 }}>총 10여 가지 질문 · 1분 이내</p>
       </div>
     </div>
   );
