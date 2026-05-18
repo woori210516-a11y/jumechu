@@ -338,8 +338,8 @@ export default function NetflixPage() {
   const totalSteps  = activeSteps.length;
 
   return (
-    <main className="min-h-screen flex justify-center items-start" style={{ background: '#0D0D0D' }}>
-      <div className="w-full max-w-[430px] min-h-screen flex flex-col" style={{ background: '#0D0D0D' }}>
+    <main className="flex justify-center items-start" style={{ background: '#0D0D0D', height: '100dvh', overflow: 'hidden' }}>
+      <div className="w-full max-w-[430px] flex flex-col" style={{ background: '#0D0D0D', height: '100dvh', overflow: 'hidden' }}>
 
         {view === 'intro' && <IntroView onStart={handleStart} />}
 
@@ -394,41 +394,47 @@ export default function NetflixPage() {
 
 function IntroView({ onStart }: { onStart: () => void }) {
   return (
-    <div className="flex flex-col flex-1 animate-fade-slide" style={{ background: '#0D0D0D', overflow: 'hidden' }}>
-      <div className="shrink-0" style={{ padding: '20px 20px 0' }}>
-        <Link
-          href="/"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#666', textDecoration: 'none' }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-          처음으로
-        </Link>
-      </div>
+    <div
+      className="animate-fade-slide"
+      style={{
+        height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center',
+        position: 'relative', background: '#0D0D0D', padding: '0 24px',
+      }}
+    >
+      <Link
+        href="/"
+        style={{
+          position: 'absolute', top: 20, left: 20,
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          fontSize: 13, color: '#666', textDecoration: 'none',
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+        처음으로
+      </Link>
 
-      <div className="flex flex-col items-center justify-center" style={{ flex: 1, overflowY: 'auto', padding: '0 24px' }}>
-        <div className="flex flex-col items-center gap-6 text-center">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
           <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#E50914', fontStyle: 'italic' }}>NETFLIX</span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <h1 style={{ fontSize: 26, fontWeight: 900, color: '#fff', lineHeight: 1.2, margin: 0 }}>오늘 뭐볼까?</h1>
-            <p style={{ fontSize: 13, color: '#666', lineHeight: 1.5 }}>뭔가 보고싶은데 뭘 보고싶은지 모르겠다면</p>
-          </div>
+          <h1 style={{ fontSize: 26, fontWeight: 900, color: '#fff', lineHeight: 1.2, margin: 0 }}>오늘 뭐볼까?</h1>
+          <p style={{ fontSize: 13, color: '#666', lineHeight: 1.5, margin: 0 }}>뭔가 보고싶은데 뭘 보고싶은지 모르겠다면</p>
         </div>
-      </div>
 
-      <div className="shrink-0" style={{ padding: '12px 20px 24px', background: '#0D0D0D', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <button
-          onClick={onStart}
-          style={{
-            width: '100%', padding: '14px', borderRadius: 10,
-            background: '#E50914', color: '#fff', fontSize: 13, fontWeight: 800,
-            border: 'none', cursor: 'pointer', transition: 'all 150ms',
-          }}
-        >
-          시작하기
-        </button>
-        <p style={{ textAlign: 'center', fontSize: 11, color: '#555' }}>1분 이내</p>
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button
+            onClick={onStart}
+            style={{
+              width: '100%', padding: '14px', borderRadius: 10,
+              background: '#E50914', color: '#fff', fontSize: 13, fontWeight: 800,
+              border: 'none', cursor: 'pointer', transition: 'all 150ms',
+            }}
+          >
+            시작하기
+          </button>
+          <p style={{ textAlign: 'center', fontSize: 11, color: '#555' }}>1분 이내</p>
+        </div>
       </div>
     </div>
   );

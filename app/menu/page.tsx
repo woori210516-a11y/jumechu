@@ -266,8 +266,8 @@ function MenuContent() {
   const shareUrl = getShareUrl();
 
   return (
-    <main className="min-h-screen flex justify-center items-start">
-      <div className="w-full max-w-[430px] min-h-screen bg-white flex flex-col">
+    <main className="flex justify-center items-start" style={{ height: '100dvh', overflow: 'hidden' }}>
+      <div className="w-full max-w-[430px] bg-white flex flex-col" style={{ height: '100dvh', overflow: 'hidden' }}>
 
         {view === 'intro' && (
           <IntroView onSolo={startSolo} onTogether={startTogether} />
@@ -372,51 +372,59 @@ function RoomErrorView({ title, sub, onBack }: { title: string; sub: string; onB
 
 function IntroView({ onSolo, onTogether }: { onSolo: () => void; onTogether: () => void }) {
   return (
-    <div className="flex flex-col flex-1 animate-fade-slide" style={{ background: '#FF5C00', overflow: 'hidden' }}>
-      <div className="shrink-0" style={{ padding: '20px 20px 0' }}>
-        <Link
-          href="/"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'rgba(255,255,255,0.7)', textDecoration: 'none' }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-          처음으로
-        </Link>
-      </div>
+    <div
+      className="animate-fade-slide"
+      style={{
+        height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center',
+        position: 'relative', background: '#FF5C00', padding: '0 24px',
+      }}
+    >
+      {/* 처음으로 (좌상단 절대 배치) */}
+      <Link
+        href="/"
+        style={{
+          position: 'absolute', top: 20, left: 20,
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          fontSize: 13, color: 'rgba(255,255,255,0.7)', textDecoration: 'none',
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+        처음으로
+      </Link>
 
-      <div className="flex flex-col items-center justify-center" style={{ flex: 1, overflowY: 'auto', padding: '0 24px' }}>
-        <div className="flex flex-col items-center gap-6 text-center">
+      {/* 중앙: 텍스트 + 버튼 */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
           <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '2.5px', color: 'rgba(255,255,255,0.5)' }}>FOOD</span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <h1 style={{ fontSize: 26, fontWeight: 900, color: '#fff', lineHeight: 1.2, margin: 0 }}>오늘 뭐먹지?</h1>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>혼자 고를지, 같이 고를지 선택하기</p>
-          </div>
+          <h1 style={{ fontSize: 26, fontWeight: 900, color: '#fff', lineHeight: 1.2, margin: 0 }}>오늘 뭐먹지?</h1>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5, margin: 0 }}>혼자 고를지, 같이 고를지 선택하기</p>
         </div>
-      </div>
 
-      <div className="shrink-0" style={{ padding: '12px 20px 24px', background: '#FF5C00', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <button
-          onClick={onSolo}
-          style={{
-            width: '100%', padding: '14px', borderRadius: 10,
-            background: '#fff', color: '#FF5C00', fontSize: 13, fontWeight: 800,
-            border: 'none', cursor: 'pointer', transition: 'all 150ms',
-          }}
-        >
-          혼자 고르기
-        </button>
-        <button
-          onClick={onTogether}
-          style={{
-            width: '100%', padding: '14px', borderRadius: 10,
-            background: 'transparent', color: '#fff', fontSize: 13, fontWeight: 800,
-            border: '1.5px solid rgba(255,255,255,0.8)', cursor: 'pointer', transition: 'all 150ms',
-          }}
-        >
-          같이 고르기
-        </button>
-        <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>총 10여 가지 질문 · 1분 이내</p>
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button
+            onClick={onSolo}
+            style={{
+              width: '100%', padding: '14px', borderRadius: 10,
+              background: '#fff', color: '#FF5C00', fontSize: 13, fontWeight: 800,
+              border: 'none', cursor: 'pointer', transition: 'all 150ms',
+            }}
+          >
+            혼자 고르기
+          </button>
+          <button
+            onClick={onTogether}
+            style={{
+              width: '100%', padding: '14px', borderRadius: 10,
+              background: 'transparent', color: '#fff', fontSize: 13, fontWeight: 800,
+              border: '1.5px solid rgba(255,255,255,0.8)', cursor: 'pointer', transition: 'all 150ms',
+            }}
+          >
+            같이 고르기
+          </button>
+          <p style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>총 10여 가지 질문 · 1분 이내</p>
+        </div>
       </div>
     </div>
   );
