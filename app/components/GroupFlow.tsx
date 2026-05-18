@@ -227,6 +227,16 @@ export function GroupWaitingView({
     setTimeout(() => setLinkCopied(false), 2500);
   }
 
+  // 네이티브 앱에 대기 화면 상태 알림 (X 버튼 색 변경용)
+  useEffect(() => {
+    const w = window as unknown as { webkit?: { messageHandlers?: { screenState?: { postMessage: (s: string) => void } } } };
+    w.webkit?.messageHandlers?.screenState?.postMessage('groupWaiting');
+    return () => {
+      // 대기 화면 벗어날 때 survey 신호로 복원
+      w.webkit?.messageHandlers?.screenState?.postMessage('survey');
+    };
+  }, []);
+
   const fetchState = useCallback(async () => {
     try {
       const state = await fetchRoomState(roomId);
