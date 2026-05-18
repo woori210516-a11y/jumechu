@@ -72,6 +72,7 @@ struct WebView: UIViewRepresentable {
 
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
+        webView.uiDelegate = context.coordinator
         webView.scrollView.contentInsetAdjustmentBehavior = .automatic
         context.coordinator.webView = webView
         store.webView = webView
@@ -86,7 +87,7 @@ struct WebView: UIViewRepresentable {
 
     // MARK: - Coordinator
 
-    class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
+    class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, WKUIDelegate {
         let onWatch: (String, String, String?, String?) -> Void
         let store: WebViewStore
         let onScreenState: ((WebScreenState) -> Void)?
@@ -109,6 +110,47 @@ struct WebView: UIViewRepresentable {
             inject(ids: pendingIds, into: webView)
             pendingIds = []
             notifyStateFromURL(webView.url)
+        }
+
+        // target="_blank" 링크 → Safari로 열기
+        func webView(_ webView: WKWebView,
+                     createWebViewWith configuration: WKWebViewConfiguration,
+                     for navigationAction: WKNavigationAction,
+                     windowFeatures: WKWindowFeatures) -> WKWebView? {
+            if let url = navigationAction.request.url {
+                UIApplication.shared.open(url)
+            }
+            return nil
+        }
+
+        // 외부 도메인 링크는 Safari로 열기 (내 도메인은 웹뷰 내부 유지)
+        func webView(_ webView: WKWebView,
+                     decidePolicyFor navigationAction: WKNavigationAction,
+                     decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+            guard let url = navigationAction.request.url else {
+                decisionHandler(.allow)
+                return
+            }
+
+            // 커스텀 스킴(netflix://, mailto: 등)은 즉시 외부로
+            if let scheme = url.scheme?.lowercased(), scheme != "http" && scheme != "https" && scheme != "about" {
+                if UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url)
+                }
+                decisionHandler(.cancel)
+                return
+            }
+
+            // 사용자가 직접 탭한 링크인지 + 외부 도메인 검사
+            if navigationAction.navigationType == .linkActivated,
+               let host = url.host?.lowercased(),
+               !host.contains("jumechu.vercel.app") && !host.contains("localhost") {
+                UIApplication.shared.open(url)
+                decisionHandler(.cancel)
+                return
+            }
+
+            decisionHandler(.allow)
         }
 
         private func notifyStateFromURL(_ url: URL?) {
