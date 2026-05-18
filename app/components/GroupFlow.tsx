@@ -216,7 +216,16 @@ export function GroupWaitingView({
   const [room, setRoom] = useState<RoomData | null>(null);
   const [participants, setParticipants] = useState<ParticipantData[]>([]);
   const [isPicking, setIsPicking] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const finalCalledRef = useRef(false);
+
+  async function handleCopyLink() {
+    const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/room/${roomId}` : '';
+    if (!shareUrl) return;
+    await navigator.clipboard.writeText(shareUrl);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2500);
+  }
 
   const fetchState = useCallback(async () => {
     try {
@@ -311,7 +320,17 @@ export function GroupWaitingView({
       </div>
 
       {/* 하단 고정 버튼 */}
-      <div className="shrink-0 px-5 pb-8 pt-3">
+      <div className="shrink-0 px-5 pb-8 pt-3" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <button
+          onClick={handleCopyLink}
+          style={{
+            width: '100%', padding: '14px', borderRadius: 10,
+            background: '#fff', color: '#FF5C00', fontSize: 13, fontWeight: 600,
+            border: '1.5px solid #FF5C00', cursor: 'pointer',
+          }}
+        >
+          {linkCopied ? '복사완료! 카톡에 붙여넣기' : '방 링크 다시 복사하기'}
+        </button>
         <button
           onClick={handlePickRandom}
           disabled={!allCompleted || isPicking}
