@@ -778,8 +778,9 @@ function ResultView({ results, error, hiddenIds, onHide, onRestart }: ResultView
   const visible = results.filter(r => !hiddenIds.has(r.id));
 
   return (
-    <div className="flex flex-col animate-fade-slide">
-      <div style={{ padding: '20px 20px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div className="flex flex-col flex-1 animate-fade-slide" style={{ overflow: 'hidden' }}>
+      {/* 헤더 고정 */}
+      <div className="shrink-0" style={{ padding: '20px 20px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <h2 style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: 0 }}>오늘의 추천</h2>
           <p style={{ fontSize: 11, color: '#666', marginTop: 3 }}>
@@ -797,26 +798,30 @@ function ResultView({ results, error, hiddenIds, onHide, onRestart }: ResultView
         </button>
       </div>
 
-      {error && (
-        <div style={{ margin: '0 20px 12px', padding: '12px 14px', borderRadius: 10, background: '#1c0303', color: '#ff6b6b', fontSize: 12 }}>
-          {error}
-        </div>
-      )}
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '4px 20px 32px' }}>
-        {visible.length === 0 && !error && (
-          <div className="flex flex-col items-center gap-3 pt-16 text-center">
-            <span style={{ fontSize: 36 }}>🎬</span>
-            <p style={{ fontSize: 12, color: '#666' }}>아직 데이터가 없어. 내일 다시 와봐!</p>
+      {/* 스크롤 영역 */}
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+        {error && (
+          <div style={{ margin: '0 20px 12px', padding: '12px 14px', borderRadius: 10, background: '#1c0303', color: '#ff6b6b', fontSize: 12 }}>
+            {error}
           </div>
         )}
-        {visible.map((item, idx) => (
-          <ContentCard key={item.id} item={item} rank={idx + 1} onHide={() => onHide(item)} />
-        ))}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '4px 20px 16px' }}>
+          {visible.length === 0 && !error && (
+            <div className="flex flex-col items-center gap-3 pt-16 text-center">
+              <span style={{ fontSize: 36 }}>🎬</span>
+              <p style={{ fontSize: 12, color: '#666' }}>아직 데이터가 없어. 내일 다시 와봐!</p>
+            </div>
+          )}
+          {visible.map((item, idx) => (
+            <ContentCard key={item.id} item={item} rank={idx + 1} onHide={() => onHide(item)} />
+          ))}
+        </div>
       </div>
 
+      {/* 하단 버튼 고정 */}
       {visible.length > 0 && (
-        <div style={{ padding: '0 20px 144px' }}>
+        <div className="shrink-0" style={{ padding: '12px 20px 32px', background: '#0D0D0D' }}>
           <button
             onClick={onRestart}
             style={{
