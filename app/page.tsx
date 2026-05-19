@@ -62,7 +62,7 @@ export default function Page() {
           <img
             src="/netflix-illust.png"
             alt=""
-            style={{ position: 'absolute', top: '10%', right: 0, width: 160, height: 160, objectFit: 'contain', zIndex: 0 }}
+            style={{ position: 'absolute', top: '10%', right: 0, width: 160, height: 160, objectFit: 'contain', objectPosition: 'right center', zIndex: 0 }}
           />
           <div style={{
             position: 'absolute',
