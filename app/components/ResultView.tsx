@@ -277,6 +277,7 @@ function AlternativeCard({ rank, item }: { rank: number; item: ScoredMenu }) {
         <span style={{ fontSize: 11, color: '#999', background: '#f5f5f5', padding: '3px 8px', borderRadius: 6 }}>{item.menu.category}</span>
         <span style={{ fontSize: 11, color: '#999', background: '#f5f5f5', padding: '3px 8px', borderRadius: 6 }}>다이어트 {item.menu.diet}</span>
       </div>
+      <MapButtons menu={item.menu} />
     </div>
   );
 }
