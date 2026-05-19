@@ -20,7 +20,7 @@ export default function Page() {
           <img
             src="/images/food-illust.png"
             alt=""
-            style={{ position: 'absolute', top: 0, right: 0, width: 160, height: 160, objectFit: 'contain' }}
+            style={{ position: 'absolute', top: '20%', left: 0, width: 160, height: 160, objectFit: 'contain', zIndex: 0 }}
           />
           <div style={{
             position: 'absolute',
@@ -30,6 +30,7 @@ export default function Page() {
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'space-between',
+            zIndex: 1,
           }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
               <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '2.5px', color: 'rgba(255,255,255,0.5)' }}>FOOD</span>
@@ -61,7 +62,7 @@ export default function Page() {
           <img
             src="/images/netflix-illust.png"
             alt=""
-            style={{ position: 'absolute', top: 0, right: 0, width: 160, height: 160, objectFit: 'contain' }}
+            style={{ position: 'absolute', top: '10%', right: 0, width: 160, height: 160, objectFit: 'contain', zIndex: 0 }}
           />
           <div style={{
             position: 'absolute',
@@ -71,6 +72,7 @@ export default function Page() {
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'space-between',
+            zIndex: 1,
           }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
               <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#E50914', fontStyle: 'italic' }}>NETFLIX</span>
