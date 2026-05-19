@@ -18,7 +18,7 @@ export default function Page() {
           }}
         >
           <img
-            src="/images/food-illust.png"
+            src="/food-illust.png"
             alt=""
             style={{ position: 'absolute', top: '20%', left: 0, width: 160, height: 160, objectFit: 'contain', zIndex: 0 }}
           />
@@ -60,7 +60,7 @@ export default function Page() {
           }}
         >
           <img
-            src="/images/netflix-illust.png"
+            src="/netflix-illust.png"
             alt=""
             style={{ position: 'absolute', top: '10%', right: 0, width: 160, height: 160, objectFit: 'contain', zIndex: 0 }}
           />
