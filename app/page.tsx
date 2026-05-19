@@ -20,7 +20,7 @@ export default function Page() {
           <img
             src="/food-illust.png"
             alt=""
-            style={{ position: 'absolute', top: '20%', left: 0, width: 160, height: 160, objectFit: 'contain', zIndex: 0 }}
+            style={{ position: 'absolute', top: '20%', left: 0, width: 160, height: 160, objectFit: 'contain', objectPosition: 'left center', zIndex: 0 }}
           />
           <div style={{
             position: 'absolute',
