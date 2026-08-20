@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import type { RecommendResult } from '@/app/api/netflix/recommend/route';
+import type { RecommendResult } from '@/app/types/netflix';
 
 // ── iOS 네이티브 브리지 타입 ──────────────────────────────────────────────────
 declare global {
@@ -264,7 +264,8 @@ export default function NetflixPage() {
           ? null
           : s.countries.flatMap(g => COUNTRY_CODES[g] ?? []);
 
-      const res = await fetch('/api/netflix/recommend', {
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+      const res = await fetch(`${apiBase}/api/netflix/recommend`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

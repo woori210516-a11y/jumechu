@@ -22,6 +22,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
+
 // ── 타입 ────────────────────────────────────────────────────────────────────
 
 const TAG_KEYS = [
@@ -33,24 +43,7 @@ const TAG_KEYS = [
 type TagKey = (typeof TAG_KEYS)[number];
 type Tags = Record<TagKey, number>;
 
-export interface RecommendResult {
-  id: string;
-  title: string;
-  show_type: string;
-  content_type: string;
-  overview: string | null;
-  release_year: number | null;
-  runtime: number | null;
-  episode_count: number | null;
-  is_ended: boolean | null;
-  genres: string[];
-  country: string[];
-  rating: number | null;
-  poster_url: string | null;
-  backdrop_url: string | null;
-  netflix_link: string | null;
-  match_score: number;
-}
+export type { RecommendResult } from '@/app/types/netflix';
 
 interface ContentRow {
   id: string;
@@ -152,7 +145,7 @@ export async function POST(req: NextRequest) {
 
     const { data, error } = await query;
     if (error) throw error;
-    if (!data || data.length === 0) return NextResponse.json([]);
+    if (!data || data.length === 0) return NextResponse.json([], { headers: CORS_HEADERS });
 
     let rows = data as ContentRow[];
 
@@ -211,10 +204,10 @@ export async function POST(req: NextRequest) {
       .sort((a, b) => b.match_score - a.match_score)
       .slice(0, 15);
 
-    return NextResponse.json(results);
+    return NextResponse.json(results, { headers: CORS_HEADERS });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error('[recommend] 실패:', e);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500, headers: CORS_HEADERS });
   }
 }
