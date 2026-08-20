@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { RecommendResult } from '@/app/types/netflix';
+import { supabase } from '@/app/lib/supabase';
 
 // ── iOS 네이티브 브리지 타입 ──────────────────────────────────────────────────
 declare global {
@@ -264,39 +265,86 @@ export default function NetflixPage() {
           ? null
           : s.countries.flatMap(g => COUNTRY_CODES[g] ?? []);
 
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
-      const res = await fetch(`${apiBase}/api/netflix/recommend`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contentTypes,
-          isEnded: s.isEnded,
-          episodeMin: s.episodeMin,
-          episodeMax: s.episodeMax,
-          runtimeMin: s.runtimeMin,
-          runtimeMax: s.runtimeMax,
-          countryCodes,
-          desired: s.desired,
-          avoidViolence: s.avoidViolence,
-          avoidAdult: s.avoidAdult,
-          avoidHorror: s.avoidHorror,
-          avoidSad: s.avoidSad,
-        }),
-      });
+      // Supabase 직접 호출
+      let query = supabase
+        .from('netflix_contents')
+        .select(
+          'id, title, show_type, content_type, overview, release_year, runtime, episode_count, is_ended, genres, country, rating, poster_url, backdrop_url, netflix_link, tags'
+        )
+        .eq('is_active', true)
+        .not('tags', 'is', null)
+        .order('rating', { ascending: false })
+        .limit(2000);
 
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.error ?? `HTTP ${res.status}`);
+      if (contentTypes && contentTypes.length > 0) {
+        query = query.in('content_type', contentTypes);
+      }
+      if (s.isEnded === true) {
+        query = query.eq('is_ended', true);
       }
 
-      const data: RecommendResult[] = await res.json();
+      const { data, error } = await query;
+      if (error) throw error;
 
-      if (data.length === 0 || (data[0]?.match_score ?? 0) < 20) {
-        setResults(data);
+      type Tags = Record<string, number>;
+      type Row = {
+        id: string; title: string; show_type: string; content_type: string;
+        overview: string | null; release_year: number | null; runtime: number | null;
+        episode_count: number | null; is_ended: boolean | null; genres: string[];
+        country: string[]; rating: number | null; poster_url: string | null;
+        backdrop_url: string | null; netflix_link: string | null; tags: Tags;
+      };
+
+      let rows = (data ?? []) as Row[];
+
+      if (s.episodeMax != null) rows = rows.filter(r => r.episode_count === null || r.episode_count <= s.episodeMax!);
+      if (s.episodeMin != null) rows = rows.filter(r => r.episode_count === null || r.episode_count >= s.episodeMin!);
+      if (s.runtimeMax != null) rows = rows.filter(r => r.runtime === null || r.runtime <= s.runtimeMax!);
+      if (s.runtimeMin != null) rows = rows.filter(r => r.runtime === null || r.runtime >= s.runtimeMin!);
+
+      if (countryCodes && countryCodes.length > 0) {
+        const codeSet = new Set(countryCodes);
+        rows = rows.filter(r => (r.country ?? []).some(c => codeSet.has(c)));
+      }
+
+      if (s.avoidViolence) rows = rows.filter(r => (r.tags?.violence ?? 0) < 7);
+      if (s.avoidAdult)    rows = rows.filter(r => (r.tags?.adult   ?? 0) < 7);
+      if (s.avoidHorror)   rows = rows.filter(r => (r.tags?.horror  ?? 0) < 7);
+      if (s.avoidSad)      rows = rows.filter(r => (r.tags?.emotion ?? 0) < 8);
+
+      function computeScore(tags: Tags, desired: Desired): number {
+        const entries = Object.entries(desired) as [string, number][];
+        if (entries.length === 0) return 50;
+        let total = 0, count = 0;
+        for (const [key, val] of entries) {
+          const tv = tags[key];
+          if (tv === undefined || tv === null) continue;
+          total += 1 - Math.abs(tv - val) / 10;
+          count++;
+        }
+        return count > 0 ? Math.round((total / count) * 100) : 50;
+      }
+
+      const results: RecommendResult[] = rows
+        .map(row => ({
+          id: row.id, title: row.title, show_type: row.show_type,
+          content_type: row.content_type, overview: row.overview,
+          release_year: row.release_year, runtime: row.runtime,
+          episode_count: row.episode_count, is_ended: row.is_ended,
+          genres: row.genres ?? [], country: row.country ?? [],
+          rating: row.rating, poster_url: row.poster_url,
+          backdrop_url: row.backdrop_url, netflix_link: row.netflix_link,
+          match_score: computeScore(row.tags, s.desired),
+        }))
+        .sort((a, b) => b.match_score - a.match_score)
+        .slice(0, 15);
+
+      if (results.length === 0 || (results[0]?.match_score ?? 0) < 20) {
+        setResults(results);
         setView('no-result');
         window.__nativeUIState?.('result');
       } else {
-        setResults(data);
+        setResults(results);
         setView('result');
         window.__nativeUIState?.('result');
       }
